@@ -45,7 +45,15 @@ function openPlay(){
  const modes=catalog.GAME_MODES.map(m=>card(m.name,m.description,"독립 엔진",btn("시작","mode",m.id,m.id==="shooter"&&!save.progression.unlockedWorlds.includes("world3")))).join("");
  panel("플레이",`<h3 class="section-title">월드</h3><div class="system-list">${worlds}</div><h3 class="section-title">게임 모드</h3><div class="panel-grid">${modes}</div>`);
 }
-function openMapModes(mapId){\n const map=content.MAP_DEFS.find(item=>item.id===mapId);\n panel(map?.name??"맵 선택",`<p class="panel-note">전투 유형을 선택하세요.</p><div class="panel-grid">\n ${card("일반 웨이브","적 무리를 차례로 상대합니다.","기본 전투",btn("시작","start-combat",mapId+"|waves"))}\n ${card("보스전","강력한 보스 한 명과 대결합니다.","보스 전투",btn("시작","start-combat",mapId+"|boss"))}\n ${card("도전 모드","90초 동안 버티며 점수를 얻습니다.","시간 제한",btn("시작","start-combat",mapId+"|challenge"))}\n </div>`);\n}\nfunction openWorld(id){
+function openMapModes(mapId){
+ const map=content.MAP_DEFS.find(item=>item.id===mapId);
+ panel(map?.name??"맵 선택",`<p class="panel-note">전투 유형을 선택하세요.</p><div class="panel-grid">
+ ${card("일반 웨이브","적 무리를 차례로 상대합니다.","기본 전투",btn("시작","start-combat",mapId+"|waves"))}
+ ${card("보스전","강력한 보스 한 명과 대결합니다.","보스 전투",btn("시작","start-combat",mapId+"|boss"))}
+ ${card("도전 모드","90초 동안 버티며 점수를 얻습니다.","시간 제한",btn("시작","start-combat",mapId+"|challenge"))}
+ </div>`);
+}
+function openWorld(id){
  const maps=content.MAP_DEFS.filter(m=>m.world===id);
  const weapons=content.WEAPON_DEFS.map(w=>{const owned=(save.progression.ownedWeapons??["starter_blaster"]).includes(w.id);return card(w.name,w.description,`공격 ${w.damage} · 가격 ${w.price} 코인`,owned?btn("무기 선택","choose-weapon",w.id):btn("구매","buy-weapon",w.id,save.player.coins<w.price));}).join("");
  const mapCards=maps.map(m=>card(m.name,m.description,"임시 테스트 맵",btn("맵 선택","choose-map",m.id))).join("")||'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다. 확정되지 않은 맵 이름을 임의로 추가하지 않았습니다.</p>';
@@ -61,7 +69,8 @@ function getWeapon(){const id=save.progression.equipment.weapon??"starter_blaste
 function startCombat(mapId="training_ground",mode="waves"){
  closePanel();currentMode="combat";
  const stats=getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS});
- const map=content.MAP_DEFS.find(item=>item.id===mapId);\n activeRun={...startArena({stats,weapon:getWeapon(),mode,gimmick:map?.gimmick}),mapId};
+ const map=content.MAP_DEFS.find(item=>item.id===mapId);
+ activeRun={...startArena({stats,weapon:getWeapon(),mode,gimmick:map?.gimmick}),mapId};
  save.records.runs++;save.records.modeRuns=(save.records.modeRuns??0)+1;
  persist();startGameLoop();renderCombat();
 }
@@ -89,7 +98,8 @@ function loop(now){
   if(hold.fire)fireArena(activeRun,now);
   stepArena(activeRun,dt,now);renderCombat();
  }
- if(activeRun.status==="lost"){finishRun(false);return;}\n if(activeRun.status==="won"){finishRun(true);return;}
+ if(activeRun.status==="lost"){finishRun(false);return;}
+ if(activeRun.status==="won"){finishRun(true);return;}
  if(activeRun.status==="wave-clear"){if(currentMode==="tower")towerFloorClear();else renderWaveClear();return;}
  gameFrame=requestAnimationFrame(loop);
 }
