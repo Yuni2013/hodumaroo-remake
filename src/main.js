@@ -71,7 +71,7 @@ function openMode(id){
  if(id==="tower"){startTower();return;}
  startShooterRun();
 }
-function getWeapon(){const id=save.progression.equipment.weapon??"starter_blaster";return content.WEAPON_DEFS.find(w=>w.id===id)||content.WEAPON_DEFS[0];}
+function getWeapon(){const id=save.progression.equipment.weapon??"starter_blaster";return {...(content.WEAPON_DEFS.find(w=>w.id===id)||content.WEAPON_DEFS[0])};}
 function startCombat(mapId="training_ground",mode="waves"){
  closePanel();currentMode="combat";
  const stats=getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS});
