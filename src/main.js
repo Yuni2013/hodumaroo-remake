@@ -11,7 +11,7 @@ import { purchaseJob, equipJob, purchaseEquipment, equipItem } from "./systems/l
 import { claimDailyReward, dailyRemaining, rotateQuestPeriod } from "./systems/daily.js";
 import { equipCollection, enchantEquipment, redeemCoupon } from "./systems/collections.js";
 import { addSeasonPoints, seasonLevel, claimSeasonReward, addEventProgress, claimEventReward } from "./systems/season.js";
-import { createTowerRun, resolveTowerFloor } from "./engines/roguelike/tower.js";
+import { createTowerRun, resolveTowerFloor, TOWER_UPGRADES, towerUpgradeCost, buyTowerUpgrade } from "./engines/roguelike/tower.js";
 import { startArena, moveArenaPlayer, fireArena, stepArena, nextArenaWave } from "./engines/combat/simulation.js";
 import { startShooter, stepShooter } from "./engines/shooter/simulation.js";
 
@@ -43,9 +43,9 @@ function card(title,desc,meta,action){return `<article class="system-card"><h3>$
 function openPlay(){
  const worlds=content.WORLD_DEFS.map(w=>row(w.name,w.description,btn("선택","world",w.id,!save.progression.unlockedWorlds.includes(w.id)))).join("");
  const modes=catalog.GAME_MODES.map(m=>card(m.name,m.description,"독립 엔진",btn("시작","mode",m.id,m.id==="shooter"&&!save.progression.unlockedWorlds.includes("world3")))).join("");
- panel("플레이",`<h3 class="section-title">월드</h3><div class="system-list">${worlds}</div><h3 class="section-title">게임 모드</h3><div class="panel-grid">${modes}</div>`);
+ panel("플레이",`<h3 class="section-title">월드</h3><div class="system-list">${worlds}</div><h3 class="section-title">게임 모드</h3><div class="panel-grid">${modes}</div><div style="margin-top:14px">${btn("탑 영구 강화","tower-upgrades")}</div>`);
 }
-function openMapModes(mapId){
+function openTowerUpgrades(){\n const list=TOWER_UPGRADES.map(item=>{const level=save.tower.permanent?.[item.id]??0,cost=towerUpgradeCost(item,level);return row(item.name,`${item.description} · Lv.${level}/${item.max} · ${cost} 정수`,btn("강화","tower-upgrade",item.id,level>=item.max||save.tower.essence<cost));}).join("");\n panel("탑 영구 강화",`<div class="panel-stats"><span>탑의 정수 ${save.tower.essence}</span></div><div class="system-list">${list}</div>`);\n}\nfunction openMapModes(mapId){
  const map=content.MAP_DEFS.find(item=>item.id===mapId);
  panel(map?.name??"맵 선택",`<p class="panel-note">전투 유형을 선택하세요.</p><div class="panel-grid">
  ${card("일반 웨이브","적 무리를 차례로 상대합니다.","기본 전투",btn("시작","start-combat",mapId+"|waves"))}
@@ -243,7 +243,7 @@ function openSettings(){
 function openSimple(title,msg){panel(title,`<p class="panel-note">${safe(msg)}</p>`);}
 function handle(action,id){
  switch(action){
- case "close":closePanel();break;case "play":openPlay();break;case "mode":openMode(id);break;case "world":openWorld(id);break;
+ case "close":closePanel();break;case "play":openPlay();break;case "tower-upgrades":openTowerUpgrades();break;case "tower-upgrade":{const item=TOWER_UPGRADES.find(x=>x.id===id),res=buyTowerUpgrade(save,item);status(res.message);persist();openTowerUpgrades();break;}case "mode":openMode(id);break;case "world":openWorld(id);break;
  case "choose-map":openMapModes(id);break;case "start-combat":{const [mapId,mode]=id.split("|");startCombat(mapId,mode);break;}case "choose-weapon":save.progression.equipment.weapon=id;persist();status("무기를 선택했습니다.");openWorld("world1");break;
  case "buy-weapon":{const w=content.WEAPON_DEFS.find(x=>x.id===id);if(save.player.coins>=w.price){save.player.coins-=w.price;save.progression.ownedWeapons??=["starter_blaster"];save.progression.ownedWeapons.push(id);persist();openWeapons();}else status("코인이 부족합니다.");break;}
  case "shop":openShop();break;case "buy-shop":{const i=catalog.SHOP_ITEMS.find(x=>x.id===id);const res=buyShopItem(save,i);status(res.message);persist();openShop();break;}
