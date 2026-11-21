@@ -8,7 +8,7 @@ import { addExperience, expRequired, getPlayerStats, getUpgradeCost } from "./sy
 import { grantReward, buyShopItem } from "./systems/economy.js";
 import { claimQuest, claimAchievement } from "./systems/objectives.js";
 import { purchaseJob, equipJob, purchaseEquipment, equipItem } from "./systems/loadout.js";
-import { claimDailyReward, dailyRemaining } from "./systems/daily.js";
+import { claimDailyReward, dailyRemaining, rotateQuestPeriod } from "./systems/daily.js";
 import { equipCollection, enchantEquipment, redeemCoupon } from "./systems/collections.js";
 import { addSeasonPoints, seasonLevel, claimSeasonReward, addEventProgress, claimEventReward } from "./systems/season.js";
 import { createTowerRun, resolveTowerFloor } from "./engines/roguelike/tower.js";
@@ -16,6 +16,7 @@ import { startArena, moveArenaPlayer, fireArena, stepArena, nextArenaWave } from
 import { startShooter, stepShooter } from "./engines/shooter/simulation.js";
 
 let save=loadSave(), activeRun=null, gameFrame=0, lastFrame=0, hold={x:0,y:0,fire:false}, currentMode="combat";
+rotateQuestPeriod(save);
 const app=document.querySelector("#app");
 const money=n=>Number(n??0).toLocaleString("ko-KR");
 const safe=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -41,10 +42,10 @@ function row(title,desc,right){return `<div class="system-row"><div><strong>${sa
 function card(title,desc,meta,action){return `<article class="system-card"><h3>${safe(title)}</h3><p>${safe(desc)}</p><div class="meta">${safe(meta||"")}</div>${action}</article>`;}
 function openPlay(){
  const worlds=content.WORLD_DEFS.map(w=>row(w.name,w.description,btn("선택","world",w.id,!save.progression.unlockedWorlds.includes(w.id)))).join("");
- const modes=catalog.GAME_MODES.map(m=>card(m.name,m.description,"독립 엔진",btn("시작","mode",m.id))).join("");
+ const modes=catalog.GAME_MODES.map(m=>card(m.name,m.description,"독립 엔진",btn("시작","mode",m.id,m.id==="shooter"&&!save.progression.unlockedWorlds.includes("world3")))).join("");
  panel("플레이",`<h3 class="section-title">월드</h3><div class="system-list">${worlds}</div><h3 class="section-title">게임 모드</h3><div class="panel-grid">${modes}</div>`);
 }
-function openWorld(id){
+function openMapModes(mapId){\n const map=content.MAP_DEFS.find(item=>item.id===mapId);\n panel(map?.name??"맵 선택",`<p class="panel-note">전투 유형을 선택하세요.</p><div class="panel-grid">\n ${card("일반 웨이브","적 무리를 차례로 상대합니다.","기본 전투",btn("시작","start-combat",mapId+"|waves"))}\n ${card("보스전","강력한 보스 한 명과 대결합니다.","보스 전투",btn("시작","start-combat",mapId+"|boss"))}\n ${card("도전 모드","90초 동안 버티며 점수를 얻습니다.","시간 제한",btn("시작","start-combat",mapId+"|challenge"))}\n </div>`);\n}\nfunction openWorld(id){
  const maps=content.MAP_DEFS.filter(m=>m.world===id);
  const weapons=content.WEAPON_DEFS.map(w=>{const owned=(save.progression.ownedWeapons??["starter_blaster"]).includes(w.id);return card(w.name,w.description,`공격 ${w.damage} · 가격 ${w.price} 코인`,owned?btn("무기 선택","choose-weapon",w.id):btn("구매","buy-weapon",w.id,save.player.coins<w.price));}).join("");
  const mapCards=maps.map(m=>card(m.name,m.description,"임시 테스트 맵",btn("맵 선택","choose-map",m.id))).join("")||'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다. 확정되지 않은 맵 이름을 임의로 추가하지 않았습니다.</p>';
@@ -57,10 +58,10 @@ function openMode(id){
  startShooterRun();
 }
 function getWeapon(){const id=save.progression.equipment.weapon??"starter_blaster";return content.WEAPON_DEFS.find(w=>w.id===id)||content.WEAPON_DEFS[0];}
-function startCombat(mapId="training_ground"){
+function startCombat(mapId="training_ground",mode="waves"){
  closePanel();currentMode="combat";
  const stats=getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS});
- activeRun={...startArena({stats,weapon:getWeapon()}),mapId};
+ const map=content.MAP_DEFS.find(item=>item.id===mapId);\n activeRun={...startArena({stats,weapon:getWeapon(),mode,gimmick:map?.gimmick}),mapId};
  save.records.runs++;save.records.modeRuns=(save.records.modeRuns??0)+1;
  persist();startGameLoop();renderCombat();
 }
@@ -88,7 +89,7 @@ function loop(now){
   if(hold.fire)fireArena(activeRun,now);
   stepArena(activeRun,dt,now);renderCombat();
  }
- if(activeRun.status==="lost"){finishRun(false);return;}
+ if(activeRun.status==="lost"){finishRun(false);return;}\n if(activeRun.status==="won"){finishRun(true);return;}
  if(activeRun.status==="wave-clear"){if(currentMode==="tower")towerFloorClear();else renderWaveClear();return;}
  gameFrame=requestAnimationFrame(loop);
 }
@@ -233,7 +234,7 @@ function openSimple(title,msg){panel(title,`<p class="panel-note">${safe(msg)}</
 function handle(action,id){
  switch(action){
  case "close":closePanel();break;case "play":openPlay();break;case "mode":openMode(id);break;case "world":openWorld(id);break;
- case "choose-map":startCombat(id);break;case "choose-weapon":save.progression.equipment.weapon=id;persist();status("무기를 선택했습니다.");openWorld("world1");break;
+ case "choose-map":openMapModes(id);break;case "start-combat":{const [mapId,mode]=id.split("|");startCombat(mapId,mode);break;}case "choose-weapon":save.progression.equipment.weapon=id;persist();status("무기를 선택했습니다.");openWorld("world1");break;
  case "buy-weapon":{const w=content.WEAPON_DEFS.find(x=>x.id===id);if(save.player.coins>=w.price){save.player.coins-=w.price;save.progression.ownedWeapons??=["starter_blaster"];save.progression.ownedWeapons.push(id);persist();openWeapons();}else status("코인이 부족합니다.");break;}
  case "shop":openShop();break;case "buy-shop":{const i=catalog.SHOP_ITEMS.find(x=>x.id===id);const res=buyShopItem(save,i);status(res.message);persist();openShop();break;}
  case "jobs":openJobs();break;case "buy-job":{const res=purchaseJob(save,catalog.JOBS.find(x=>x.id===id));status(res.message);persist();openJobs();break;}case "equip-job":equipJob(save,catalog.JOBS.find(x=>x.id===id));persist();openJobs();break;
