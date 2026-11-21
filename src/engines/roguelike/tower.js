@@ -5,7 +5,7 @@ export function resolveTowerFloor(save, run, result) {
     save.tower.floor = Math.max(save.tower.floor, run.floor);
     save.records.towerBest = Math.max(save.records.towerBest, run.floor);
     save.tower.essence += 1 + Math.floor(run.floor / 10);
-    return { type: run.floor % 3 === 0 ? "choice" : "next", floor: run.floor };
+    return { type: (run.floor - 1) % 3 === 0 ? "choice" : "next", floor: run.floor };
   }
   run.status = "ended";
   return { type: "ended", best: save.records.towerBest };
