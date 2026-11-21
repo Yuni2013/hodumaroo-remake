@@ -26,9 +26,9 @@ export function getPlayerStats(save, catalog) {
     for (const [key, value] of Object.entries(item?.bonus ?? {})) bonus[key] = (bonus[key] ?? 0) + value;
   }
   return {
-    maxHp: save.player.maxHp + (upgrades.health ?? 0) * 10 + (job.bonus.maxHp ?? 0) + (bonus.maxHp ?? 0),
-    damage: save.player.damage + (upgrades.damage ?? 0) + (job.bonus.damage ?? 0),
-    defense: save.player.defense + (upgrades.defense ?? 0) + (bonus.defense ?? 0),
+    maxHp: save.player.maxHp + (upgrades.health ?? 0) * 10 + (job.bonus.maxHp ?? 0) + (bonus.maxHp ?? 0) + (save.tower?.permanent?.vitality ?? 0) * 5,
+    damage: save.player.damage + (upgrades.damage ?? 0) + (job.bonus.damage ?? 0) + (save.tower?.permanent?.power ?? 0),
+    defense: save.player.defense + (upgrades.defense ?? 0) + (bonus.defense ?? 0) + (save.tower?.permanent?.guard ?? 0),
     speed: save.player.speed + (upgrades.speed ?? 0) * 0.08 + (bonus.speed ?? 0),
   };
 }
