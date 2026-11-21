@@ -10,6 +10,7 @@ export function grantReward(save, reward = {}) {
   if (reward.items) for (const [id, count] of Object.entries(reward.items)) save.progression.inventory[id] = (save.progression.inventory[id] ?? 0) + count;
 }
 export function buyShopItem(save, item) {
+  if (item.kind === "unlock" && save.progression.hasStarship) return { ok: false, message: "이미 보유한 우주선입니다." };
   if (!spend(save, "coins", item.price)) return { ok: false, message: "코인이 부족합니다." };
   if (item.kind === "resource") save.player.energy += item.energy ?? 0;
   else if (item.kind === "unlock") { save.progression.hasStarship = true; if (!save.progression.unlockedWorlds.includes(item.unlock)) save.progression.unlockedWorlds.push(item.unlock); save.progression.inventory[item.id] = 1; }
