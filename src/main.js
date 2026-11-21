@@ -148,7 +148,7 @@ function finishRun(won){
  if(currentMode==="shooter")save.records.shooterBest=Math.max(save.records.shooterBest??0,r.score??0);
  save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
  save.records.clearedBosses??=[];
- if(won&&currentMode==="combat"&&r.bossKills>0&&!save.records.clearedBosses.includes(r.mapId))save.records.clearedBosses.push(r.mapId);
+ if(currentMode==="combat"&&r.bossKills>0&&!save.records.clearedBosses.includes(r.mapId))save.records.clearedBosses.push(r.mapId);
  if(save.records.clearedBosses.length>=11&&!save.progression.unlockedWorlds.includes("world2"))save.progression.unlockedWorlds.push("world2");
  if(save.records.clearedBosses.length>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
  if(save.records.clearedBosses.length>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");
@@ -177,6 +177,7 @@ function towerFloorClear(){
  const outcome=resolveTowerFloor(save,r.tower,"victory");
  save.tower.essence=save.tower.essence??0;
  save.records.towerBest=Math.max(save.records.towerBest,outcome.floor);
+ if(save.records.towerBest>=10)save.achievements.tower_floor_10={...(save.achievements.tower_floor_10??{}),completed:true,claimed:!!save.achievements.tower_floor_10?.claimed};
  if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");
  if(save.records.towerBest>=10&&!save.collections.relics.includes("guard_emblem"))save.collections.relics.push("guard_emblem");
  grantReward(save,{coins:15+outcome.floor*3,energy:1+Math.floor(outcome.floor/5)});
@@ -188,7 +189,7 @@ function towerFloorClear(){
  }else panel("층 클리어",`<p class="panel-note">${outcome.floor}층으로 이동합니다.</p>${btn("다음 층","tower-next")}${btn("탑 종료","end-run")}`);
 }
 function openShop(){
- const list=catalog.SHOP_ITEMS.map(i=>row(i.name,i.description+` · ${i.price} 코인`,btn("구매","buy-shop",i.id,save.player.coins<i.price))).join("");
+ const list=catalog.SHOP_ITEMS.map(i=>row(i.name,i.description+` · ${i.price} 코인`,btn(save.progression.hasStarship&&i.id==="starship"?"보유 중":"구매","buy-shop",i.id,save.player.coins<i.price||(i.id==="starship"&&!!save.progression.hasStarship)))).join("");
  panel("상점",`<div class="panel-stats"><span>코인 ${money(save.player.coins)}</span><span>에너지 ${money(save.player.energy)}</span></div><div class="system-list">${list}</div>`);
 }
 function openJobs(){
