@@ -1,7 +1,7 @@
 import { createMovementGimmick, modifyMovementInput } from "./movement-gimmicks.js";
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-export function startArena({stats,weapon,wave=1,gimmick=null}) {
-  return {status:"playing",wave,kills:0,bossKills:0,score:0,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],nextId:1,spawned:0,waveGoal:5+wave*2,invulnerable:0};
+export function startArena({stats,weapon,wave=1,gimmick=null,mode="waves"}) {
+  return {status:"playing",mode,wave,kills:0,bossKills:0,score:0,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],nextId:1,spawned:0,waveGoal:mode==="boss"?1:mode==="challenge"?30:5+wave*2,invulnerable:0};
 }
 export function moveArenaPlayer(run,dx,dy,dt) {
   if(run.status!=="playing")return;
@@ -28,7 +28,7 @@ export function stepArena(run,dt,now=performance.now()) {
   if(run.spawned<run.waveGoal&&now-run.lastSpawn>Math.max(350,1300-run.wave*35)){
     const side=Math.floor(Math.random()*4),pos=Math.random()*0.8+0.1;
     const point=side===0?{x:0.04,y:pos}:side===1?{x:0.96,y:pos}:side===2?{x:pos,y:0.07}:{x:pos,y:0.93};
-    run.enemies.push({id:run.nextId++,...point,hp:18+run.wave*5,maxHp:18+run.wave*5,speed:0.10+Math.min(.09,run.wave*.004),boss:run.spawned===run.waveGoal-1&&run.wave%5===0});
+    run.enemies.push({id:run.nextId++,...point,hp:run.mode==="boss"?220:18+run.wave*5,maxHp:run.mode==="boss"?220:18+run.wave*5,speed:0.10+Math.min(.09,run.wave*.004),boss:run.mode==="boss"||(run.spawned===run.waveGoal-1&&run.wave%5===0)});
     run.spawned++;run.lastSpawn=now;
   }
   for(const enemy of run.enemies){
@@ -45,7 +45,8 @@ export function stepArena(run,dt,now=performance.now()) {
   run.projectiles=run.projectiles.filter(s=>!s.dead);
   run.enemies=run.enemies.filter(e=>!e.dead);
   if(run.player.hp<=0)run.status="lost";
-  else if(run.spawned>=run.waveGoal&&run.enemies.length===0)run.status="wave-clear";
+  else if(run.mode==="challenge"&&run.elapsed>=90)run.status="won";
+  else if(run.spawned>=run.waveGoal&&run.enemies.length===0)run.status=run.mode==="boss"?"won":"wave-clear";
 }
 export function nextArenaWave(run) {
   if(run.status!=="wave-clear")return false;
