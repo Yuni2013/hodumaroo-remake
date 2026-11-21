@@ -1,4 +1,4 @@
-.screen-layer{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:18px;background:rgba(31,20,48,.58);backdrop-filter:blur(5px)}
+.screen-layer{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:18px;background:rgba(31,20,48,.58);backdrop-filter:blur(5px)}
 .game-panel{width:min(760px,96vw);max-height:min(88vh,900px);overflow:auto;padding:22px;border:2px solid rgba(255,255,255,.85);border-radius:22px;background:linear-gradient(145deg,#fffaf0,#f2e8ff);box-shadow:0 18px 60px #1e123b55;color:#49335f}
 .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
 .panel-head h2{margin:0;font-size:clamp(20px,4vw,30px)}
