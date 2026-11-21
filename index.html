@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <meta name="description" content="호두마루 리메이크 프로젝트" />
+    <title>호두마루 RE:MAKE</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="site-header">
+        <a class="brand" href="./" aria-label="호두마루 리메이크 홈">
+          <span class="brand-mark">H</span>
+          <span>HODUMAROO <strong>RE:MAKE</strong></span>
+        </a>
+        <span class="build-label"><i></i> DEVELOPMENT BUILD</span>
+      </header>
+
+      <main>
+        <section class="hero">
+          <p class="eyebrow">INDEPENDENT FAN PROJECT</p>
+          <h1>호두마루 <span>RE:MAKE</span></h1>
+          <p class="hero-copy">
+            익숙한 플레이 감각을 바탕으로,<br class="desktop-break" />
+            새로운 전장과 도전을 만들어 갑니다.
+          </p>
+        </section>
+
+        <section class="mode-section" aria-labelledby="mode-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SELECT MODE</p>
+              <h2 id="mode-title">게임 모드</h2>
+            </div>
+            <span class="section-index">01 / 03</span>
+          </div>
+
+          <div class="mode-grid">
+            <button class="mode-card" type="button" data-mode="combat">
+              <span class="mode-number">01</span>
+              <span class="mode-icon" aria-hidden="true">⚔</span>
+              <span class="mode-title">일반 전투</span>
+              <span class="mode-description">웨이브와 보스에 도전하는 기본 전투 모드</span>
+              <span class="mode-action">준비 중 <b>→</b></span>
+            </button>
+
+            <button class="mode-card" type="button" data-mode="tower">
+              <span class="mode-number">02</span>
+              <span class="mode-icon" aria-hidden="true">▥</span>
+              <span class="mode-title">로그라이크 타워</span>
+              <span class="mode-description">층을 오르며 매번 다른 선택을 하는 도전</span>
+              <span class="mode-action">준비 중 <b>→</b></span>
+            </button>
+
+            <button class="mode-card" type="button" data-mode="shooter">
+              <span class="mode-number">03</span>
+              <span class="mode-icon" aria-hidden="true">✦</span>
+              <span class="mode-title">슈터</span>
+              <span class="mode-description">위에서 몰려오는 적을 상대하는 슈팅 모드</span>
+              <span class="mode-action">준비 중 <b>→</b></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="status-panel" aria-live="polite">
+          <span class="status-indicator"></span>
+          <p id="status-message">프로젝트 초기 화면이 정상적으로 준비되었습니다.</p>
+          <span id="load-status" class="load-status">HTML · CSS · JS 연결 대기</span>
+        </section>
+      </main>
+
+      <footer>
+        <span>HODUMAROO RE:MAKE</span>
+        <span>EARLY DEVELOPMENT</span>
+      </footer>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
