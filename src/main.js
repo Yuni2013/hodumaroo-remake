@@ -84,7 +84,7 @@ function loop(now){
   if(hold.x)activeRun.player.x=Math.max(.06,Math.min(.94,activeRun.player.x+hold.x*.65*dt));
   stepShooter(activeRun,dt,now);renderShooter();
  }else{
-  if(hold.x||hold.y)moveArenaPlayer(activeRun,hold.x,hold.y,dt);
+  moveArenaPlayer(activeRun,hold.x,hold.y,dt);
   if(hold.fire)fireArena(activeRun,now);
   stepArena(activeRun,dt,now);renderCombat();
  }
@@ -130,6 +130,7 @@ function finishRun(won){
  const level=addExperience(save,exp);
  save.records.kills+=r.kills;
  save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
+ if(save.records.bossKills>=11&&!save.progression.unlockedWorlds.includes("world2"))save.progression.unlockedWorlds.push("world2");
  if(save.records.bossKills>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
  if(save.records.bossKills>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");
  if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");
@@ -141,9 +142,9 @@ function finishRun(won){
 
  addEventProgress(save,"welcome_week",1);
  if(r.kills)save.quests.kill_10={...(save.quests.kill_10??{progress:0}),progress:Math.min(10,(save.quests.kill_10?.progress??0)+r.kills),completed:(save.quests.kill_10?.progress??0)+r.kills>=10};
- if(save.records.kills>=10)save.achievements.ten_kills={completed:true,claimed:false};
- save.achievements.first_run={completed:true,claimed:false};
- if(won)save.achievements.first_victory={completed:true,claimed:false};
+ if(save.records.kills>=10)save.achievements.ten_kills={...(save.achievements.ten_kills??{}),completed:true,claimed:!!save.achievements.ten_kills?.claimed};
+ save.achievements.first_run={...(save.achievements.first_run??{}),completed:true,claimed:!!save.achievements.first_run?.claimed};
+ if(won)save.achievements.first_victory={...(save.achievements.first_victory??{}),completed:true,claimed:!!save.achievements.first_victory?.claimed};
  persist();activeRun=null;
  panel(won?"전투 승리":"전투 종료",`<div class="panel-stats"><span>처치 ${r.kills}</span><span>코인 +${coins}</span><span>에너지 +${energy}</span><span>EXP +${exp}</span></div><p class="panel-note">${level.levels? "레벨 업! "+level.levels+"회 상승했습니다.": "전투 기록을 저장했습니다."}</p>${btn("로비로","home")}`);
 }
