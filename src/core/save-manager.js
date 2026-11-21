@@ -6,7 +6,6 @@ export const createDefaultSave = () => ({
   records: { runs: 0, wins: 0, kills: 0, coinsEarned: 0, towerBest: 0, shooterBest: 0 },
   achievements: {},
   quests: {},
-  tower: { floor: 1, essence: 0, permanent: {} },
   settings: { bgmVolume: 0.18, bgmEnabled: true, soundEnabled: true, screenShake: true },
   daily: { lastClaim: 0, streak: 0 },
   questRotation: { day: "", week: "" },
