@@ -160,7 +160,6 @@ function finishRun(won){
  for(const [metric,amount] of [["runs",1],["kills",r.kills],["coinsEarned",coins]]) for(const q of questDefs.filter(q=>q.metric===metric)){const state=save.quests[q.id]??{progress:0,completed:false,claimed:false};state.progress=Math.min(q.target,state.progress+amount);state.period=q.period??"basic";state.completed=state.progress>=q.target;save.quests[q.id]=state;}
 
  addEventProgress(save,"welcome_week",1);
- if(r.kills)save.quests.kill_10={...(save.quests.kill_10??{progress:0}),progress:Math.min(10,(save.quests.kill_10?.progress??0)+r.kills),completed:(save.quests.kill_10?.progress??0)+r.kills>=10};
  if(save.records.kills>=10)save.achievements.ten_kills={...(save.achievements.ten_kills??{}),completed:true,claimed:!!save.achievements.ten_kills?.claimed};
  save.achievements.first_run={...(save.achievements.first_run??{}),completed:true,claimed:!!save.achievements.first_run?.claimed};
  if(won)save.achievements.first_victory={...(save.achievements.first_victory??{}),completed:true,claimed:!!save.achievements.first_victory?.claimed};
