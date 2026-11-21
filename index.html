@@ -1,86 +1,70 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f4e9ff" />
-    <meta name="description" content="호두마루 리메이크 프로젝트" />
-    <title>호두마루</title>
-  </head>
-  <body>
-    <main id="app" class="lobby-screen">
-      <div class="ambient ambient-one"></div>
-      <div class="ambient ambient-two"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#fdf6e3" />
+  <title>호두마루 - Zombie Survival</title>
+</head>
+<body>
+  <main id="app" class="lobby-screen">
+    <div class="lobby-center">
+      <div class="logo">호두마루</div>
+      <div class="logo-sub">ZOMBIE SURVIVAL</div>
 
-      <header class="top-bar">
-        <div class="resource-list">
-          <div class="resource coin"><span class="resource-icon">🪙</span><strong id="coin-count">0</strong></div>
-          <div class="resource energy"><span class="resource-icon">⚡</span><strong id="energy-count">0</strong></div>
-        </div>
-        <button class="profile-button" type="button" aria-label="플레이어 정보">🙂</button>
-      </header>
+      <div class="res-row">
+        <div class="rb cb">🪙 <span id="coin-count">0</span></div>
+        <div class="rb eb">⚡ <span id="energy-count">0</span></div>
+      </div>
 
-      <section class="lobby-main" aria-label="메인 로비">
-        <div class="brand-area">
-          <div class="brand-sparkle sparkle-left">✦</div>
-          <p class="brand-kicker">ZOMBIE SURVIVAL</p>
-          <h1 class="game-logo">호두마루</h1>
-          <p class="brand-caption">새로운 전장에서 다시 시작!</p>
-          <div class="brand-sparkle sparkle-right">✧</div>
-        </div>
+      <div class="lobby-grid">
+        <button class="lb play" type="button" data-action="play">▶ 플레이</button>
 
-        <div class="player-progress">
-          <div class="level-badge">Lv.<strong id="player-level">1</strong></div>
-          <div class="progress-main">
-            <div class="progress-label"><span>플레이어 경험치</span><strong id="exp-label">0 / 100</strong></div>
-            <div class="progress-track"><div id="exp-fill" class="progress-fill"></div></div>
+        <div class="pl-level-bar" data-action="level">
+          <div class="pl-lv-badge">Lv.<span id="player-level">1</span></div>
+          <div class="pl-bar-track">
+            <div class="pl-bar-fill" id="exp-fill"></div>
+            <div class="pl-bar-txt" id="exp-label">0 / 100</div>
           </div>
+          <button class="pl-star-btn" type="button" data-action="star" aria-label="차원의 별">🌠</button>
         </div>
 
-        <button class="play-button" type="button" data-action="play">
-          <span class="play-symbol">▶</span>
-          <span><strong>플레이</strong><small>전투 준비하기</small></span>
-          <span class="play-arrow">›</span>
-        </button>
+        <button class="lb shop" type="button" data-action="shop">🛒 상점</button>
+        <button class="lb skin" type="button" data-action="jobs">⚔️ 직업</button>
+        <button class="lb upg" type="button" data-action="upgrades">⬆ 영구업그레이드</button>
+        <button class="lb equip" type="button" data-action="equipment">🎒 장비</button>
+        <button class="lb locked" type="button" data-action="pets">🔒 ???</button>
+        <button class="lb locked" type="button" data-action="relics">🔒 ???</button>
+        <button class="lb ach" type="button" data-action="achievements">🏆 업적</button>
+        <button class="lb quest" type="button" data-action="quests">📅 퀘스트</button>
+      </div>
+    </div>
 
-        <section class="menu-section" aria-label="게임 메뉴">
-          <div class="menu-grid">
-            <button class="menu-card shop-card" type="button" data-action="shop">
-              <span class="menu-icon">🛒</span><strong>상점</strong><small>아이템 구매</small>
-            </button>
-            <button class="menu-card job-card" type="button" data-action="jobs">
-              <span class="menu-icon">⚔️</span><strong>직업</strong><small>전투 스타일</small>
-            </button>
-            <button class="menu-card upgrade-card" type="button" data-action="upgrades">
-              <span class="menu-icon">⬆️</span><strong>영구 업그레이드</strong><small>능력 강화</small>
-            </button>
-            <button class="menu-card equipment-card" type="button" data-action="equipment">
-              <span class="menu-icon">🎒</span><strong>장비</strong><small>장비 관리</small>
-            </button>
-            <button class="menu-card achievement-card" type="button" data-action="achievements">
-              <span class="menu-icon">🏆</span><strong>업적</strong><small>도전 기록</small>
-            </button>
-            <button class="menu-card quest-card" type="button" data-action="quests">
-              <span class="menu-icon">📅</span><strong>퀘스트</strong><small>오늘의 목표</small>
-            </button>
-          </div>
-        </section>
+    <aside class="side-tabs right-tabs" aria-label="추가 메뉴">
+      <button class="side-tab event-tab" type="button" data-action="events"><span>🎉</span><b>이벤트</b></button>
+      <button class="side-tab season-tab" type="button" data-action="season"><span>🌟</span><b>시즌패스</b></button>
+      <button class="side-tab enchant-tab" type="button" data-action="enchant"><span>🔮</span><b>인챈트</b></button>
+    </aside>
+    <aside class="side-tabs left-tabs" aria-label="인벤토리">
+      <button class="side-tab inventory-tab" type="button" data-action="inventory"><span>🎒</span><b>인벤토리</b></button>
+    </aside>
 
-        <div class="side-actions">
-          <button type="button" data-action="events"><span>🎉</span> 이벤트</button>
-          <button type="button" data-action="inventory"><span>🎒</span> 인벤토리</button>
-          <button type="button" data-action="settings"><span>⚙️</span> 설정</button>
-        </div>
+    <button class="notice-float" type="button" data-action="notice">
+      <span class="notice-bell">🔔</span><span>공지사항</span><i>NEW</i>
+    </button>
 
-        <div class="notice-card">
-          <span class="notice-icon">🔔</span>
-          <div><strong>공지사항</strong><small id="status-message">호두마루 리메이크에 오신 것을 환영합니다!</small></div>
-          <span class="notice-new">NEW</span>
-        </div>
-      </section>
+    <div class="daily-box" aria-hidden="true"><span>🎁</span></div>
+    <div class="version-label">호두마루 RE:MAKE</div>
 
-      <footer class="lobby-footer"><span>HODUMAROO</span><span>RE:MAKE · DEVELOPMENT</span></footer>
-    </main>
-    <script type="module" src="./src/main.js"></script>
-  </body>
+    <div class="audio-control">
+      <span>🎵 BGM</span>
+      <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.18" aria-label="배경음악 음량" />
+      <button type="button" data-action="audio">ON/OFF</button>
+    </div>
+    <button class="corner-button code-button" type="button" data-action="code">🔑 CODE</button>
+    <button class="corner-button settings-button" type="button" data-action="settings">⚙️ 설정</button>
+    <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
 </html>
