@@ -8,6 +8,14 @@ export const createDefaultSave = () => ({
   quests: {},
   tower: { floor: 1, essence: 0, permanent: {} },
   settings: { bgmVolume: 0.18, bgmEnabled: true, soundEnabled: true, screenShake: true },
+  daily: { lastClaim: 0, streak: 0 },
+  questRotation: { day: "", week: "" },
+  collections: { pets: [], relics: [] },
+  season: { points: 0, claimed: [] },
+  events: {},
+  enchant: {},
+  redeemedCoupons: [],
+  tower: { floor: 1, essence: 0, permanent: {} },
 });
 function mergeDefaults(defaults, saved) {
   if (!saved || typeof saved !== "object") return structuredClone(defaults);
