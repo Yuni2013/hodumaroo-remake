@@ -1,0 +1,353 @@
+@import url("https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap");
+
+:root {
+  font-family: "Noto Sans KR", sans-serif;
+  color: #f4f5f7;
+  background: #10141d;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --muted: #9ba4b5;
+  --line: rgba(255, 255, 255, 0.1);
+  --accent: #b69aff;
+  --accent-strong: #8d6cf0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: #10141d;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(112, 84, 178, 0.2), transparent 42rem),
+    linear-gradient(145deg, #151b29 0%, #10141d 55%, #171421 100%);
+}
+
+button, a {
+  font: inherit;
+}
+
+button:focus-visible, a:focus-visible {
+  outline: 3px solid #d5c5ff;
+  outline-offset: 4px;
+}
+
+#app {
+  width: min(1120px, calc(100% - 48px));
+  min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header {
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #f4f1fb;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+}
+
+.brand strong {
+  color: var(--accent);
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #171322;
+  background: linear-gradient(140deg, #d8c5ff, #9576ef);
+  font-family: "Do Hyeon", sans-serif;
+  font-size: 23px;
+  letter-spacing: 0;
+}
+
+.build-label, .eyebrow, .section-index, footer, .load-status {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.build-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #aab2c1;
+}
+
+.build-label i, .status-indicator {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-radius: 50%;
+  background: #79d6a6;
+  box-shadow: 0 0 12px rgba(121, 214, 166, 0.7);
+}
+
+main {
+  flex: 1;
+}
+
+.hero {
+  padding: 86px 0 76px;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: var(--accent);
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: "Do Hyeon", sans-serif;
+  font-size: clamp(48px, 8vw, 78px);
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  line-height: 1.1;
+}
+
+.hero h1 span {
+  color: #b99fff;
+}
+
+.hero-copy {
+  margin: 20px 0 0;
+  color: #aab2c1;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.section-heading .eyebrow {
+  margin-bottom: 7px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.section-index {
+  padding-bottom: 5px;
+  color: #788296;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.mode-card {
+  min-height: 235px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(194, 174, 255, 0.17);
+  border-radius: 17px;
+  color: #f4f5f7;
+  background: linear-gradient(150deg, rgba(40, 43, 61, 0.94), rgba(26, 28, 41, 0.94));
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.mode-card::after {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -65px;
+  top: -70px;
+  border-radius: 50%;
+  background: rgba(164, 132, 255, 0.08);
+  transition: transform 180ms ease;
+}
+
+.mode-card:hover, .mode-card.is-selected {
+  border-color: rgba(190, 164, 255, 0.75);
+  background: linear-gradient(150deg, rgba(54, 47, 78, 0.98), rgba(29, 29, 45, 0.98));
+  transform: translateY(-3px);
+}
+
+.mode-card:hover::after {
+  transform: scale(1.4);
+}
+
+.mode-number {
+  color: #8992a5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.mode-icon {
+  margin-top: 19px;
+  color: #c5adff;
+  font-size: 25px;
+}
+
+.mode-title {
+  margin-top: 12px;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.mode-description {
+  margin-top: 8px;
+  color: #aab2c1;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.mode-action {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 20px;
+  color: #c5adff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.mode-action b {
+  font-size: 17px;
+  line-height: 0.8;
+}
+
+.status-panel {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.status-panel p {
+  flex: 1;
+  margin: 0;
+  color: #c1c7d2;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.load-status {
+  color: #79d6a6;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 28px 0;
+  margin-top: 58px;
+  border-top: 1px solid var(--line);
+  color: #687286;
+  font-size: 9px;
+}
+
+@media (max-width: 760px) {
+  #app {
+    width: min(100% - 32px, 560px);
+  }
+
+  .site-header {
+    height: 68px;
+  }
+
+  .brand {
+    font-size: 11px;
+  }
+
+  .build-label {
+    font-size: 8px;
+  }
+
+  .hero {
+    padding: 66px 0 55px;
+  }
+
+  .hero-copy {
+    font-size: 13px;
+  }
+
+  .mode-grid {
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+
+  .mode-card {
+    min-height: 185px;
+    padding: 20px;
+  }
+
+  .mode-icon {
+    margin-top: 10px;
+  }
+
+  .status-panel {
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .status-indicator {
+    flex: 0 0 7px;
+    margin-top: 5px;
+  }
+
+  .load-status {
+    display: none;
+  }
+
+  footer {
+    margin-top: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
