@@ -3,79 +3,84 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#111827" />
+    <meta name="theme-color" content="#f4e9ff" />
     <meta name="description" content="호두마루 리메이크 프로젝트" />
-    <title>호두마루 RE:MAKE</title>
+    <title>호두마루</title>
   </head>
   <body>
-    <div id="app">
-      <header class="site-header">
-        <a class="brand" href="./" aria-label="호두마루 리메이크 홈">
-          <span class="brand-mark">H</span>
-          <span>HODUMAROO <strong>RE:MAKE</strong></span>
-        </a>
-        <span class="build-label"><i></i> DEVELOPMENT BUILD</span>
+    <main id="app" class="lobby-screen">
+      <div class="ambient ambient-one"></div>
+      <div class="ambient ambient-two"></div>
+
+      <header class="top-bar">
+        <div class="resource-list">
+          <div class="resource coin"><span class="resource-icon">🪙</span><strong id="coin-count">0</strong></div>
+          <div class="resource energy"><span class="resource-icon">⚡</span><strong id="energy-count">0</strong></div>
+        </div>
+        <button class="profile-button" type="button" aria-label="플레이어 정보">🙂</button>
       </header>
 
-      <main>
-        <section class="hero">
-          <p class="eyebrow">INDEPENDENT FAN PROJECT</p>
-          <h1>호두마루 <span>RE:MAKE</span></h1>
-          <p class="hero-copy">
-            익숙한 플레이 감각을 바탕으로,<br class="desktop-break" />
-            새로운 전장과 도전을 만들어 갑니다.
-          </p>
-        </section>
+      <section class="lobby-main" aria-label="메인 로비">
+        <div class="brand-area">
+          <div class="brand-sparkle sparkle-left">✦</div>
+          <p class="brand-kicker">ZOMBIE SURVIVAL</p>
+          <h1 class="game-logo">호두마루</h1>
+          <p class="brand-caption">새로운 전장에서 다시 시작!</p>
+          <div class="brand-sparkle sparkle-right">✧</div>
+        </div>
 
-        <section class="mode-section" aria-labelledby="mode-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">SELECT MODE</p>
-              <h2 id="mode-title">게임 모드</h2>
-            </div>
-            <span class="section-index">01 / 03</span>
+        <div class="player-progress">
+          <div class="level-badge">Lv.<strong id="player-level">1</strong></div>
+          <div class="progress-main">
+            <div class="progress-label"><span>플레이어 경험치</span><strong id="exp-label">0 / 100</strong></div>
+            <div class="progress-track"><div id="exp-fill" class="progress-fill"></div></div>
           </div>
+        </div>
 
-          <div class="mode-grid">
-            <button class="mode-card" type="button" data-mode="combat">
-              <span class="mode-number">01</span>
-              <span class="mode-icon" aria-hidden="true">⚔</span>
-              <span class="mode-title">일반 전투</span>
-              <span class="mode-description">웨이브와 보스에 도전하는 기본 전투 모드</span>
-              <span class="mode-action">준비 중 <b>→</b></span>
+        <button class="play-button" type="button" data-action="play">
+          <span class="play-symbol">▶</span>
+          <span><strong>플레이</strong><small>전투 준비하기</small></span>
+          <span class="play-arrow">›</span>
+        </button>
+
+        <section class="menu-section" aria-label="게임 메뉴">
+          <div class="menu-grid">
+            <button class="menu-card shop-card" type="button" data-action="shop">
+              <span class="menu-icon">🛒</span><strong>상점</strong><small>아이템 구매</small>
             </button>
-
-            <button class="mode-card" type="button" data-mode="tower">
-              <span class="mode-number">02</span>
-              <span class="mode-icon" aria-hidden="true">▥</span>
-              <span class="mode-title">로그라이크 타워</span>
-              <span class="mode-description">층을 오르며 매번 다른 선택을 하는 도전</span>
-              <span class="mode-action">준비 중 <b>→</b></span>
+            <button class="menu-card job-card" type="button" data-action="jobs">
+              <span class="menu-icon">⚔️</span><strong>직업</strong><small>전투 스타일</small>
             </button>
-
-            <button class="mode-card" type="button" data-mode="shooter">
-              <span class="mode-number">03</span>
-              <span class="mode-icon" aria-hidden="true">✦</span>
-              <span class="mode-title">슈터</span>
-              <span class="mode-description">위에서 몰려오는 적을 상대하는 슈팅 모드</span>
-              <span class="mode-action">준비 중 <b>→</b></span>
+            <button class="menu-card upgrade-card" type="button" data-action="upgrades">
+              <span class="menu-icon">⬆️</span><strong>영구 업그레이드</strong><small>능력 강화</small>
+            </button>
+            <button class="menu-card equipment-card" type="button" data-action="equipment">
+              <span class="menu-icon">🎒</span><strong>장비</strong><small>장비 관리</small>
+            </button>
+            <button class="menu-card achievement-card" type="button" data-action="achievements">
+              <span class="menu-icon">🏆</span><strong>업적</strong><small>도전 기록</small>
+            </button>
+            <button class="menu-card quest-card" type="button" data-action="quests">
+              <span class="menu-icon">📅</span><strong>퀘스트</strong><small>오늘의 목표</small>
             </button>
           </div>
         </section>
 
-        <section class="status-panel" aria-live="polite">
-          <span class="status-indicator"></span>
-          <p id="status-message">프로젝트 초기 화면이 정상적으로 준비되었습니다.</p>
-          <span id="load-status" class="load-status">HTML · CSS · JS 연결 대기</span>
-        </section>
-      </main>
+        <div class="side-actions">
+          <button type="button" data-action="events"><span>🎉</span> 이벤트</button>
+          <button type="button" data-action="inventory"><span>🎒</span> 인벤토리</button>
+          <button type="button" data-action="settings"><span>⚙️</span> 설정</button>
+        </div>
 
-      <footer>
-        <span>HODUMAROO RE:MAKE</span>
-        <span>EARLY DEVELOPMENT</span>
-      </footer>
-    </div>
+        <div class="notice-card">
+          <span class="notice-icon">🔔</span>
+          <div><strong>공지사항</strong><small id="status-message">호두마루 리메이크에 오신 것을 환영합니다!</small></div>
+          <span class="notice-new">NEW</span>
+        </div>
+      </section>
 
+      <footer class="lobby-footer"><span>HODUMAROO</span><span>RE:MAKE · DEVELOPMENT</span></footer>
+    </main>
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>
