@@ -12,6 +12,7 @@ export function grantReward(save, reward = {}) {
 export function buyShopItem(save, item) {
   if (!spend(save, "coins", item.price)) return { ok: false, message: "코인이 부족합니다." };
   if (item.kind === "resource") save.player.energy += item.energy ?? 0;
+  else if (item.kind === "unlock") { save.progression.hasStarship = true; if (!save.progression.unlockedWorlds.includes(item.unlock)) save.progression.unlockedWorlds.push(item.unlock); save.progression.inventory[item.id] = 1; }
   else save.progression.inventory[item.id] = (save.progression.inventory[item.id] ?? 0) + 1;
   return { ok: true, message: `${item.name} 구매 완료!` };
 }
