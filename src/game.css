@@ -1,0 +1,26 @@
+.section-title{margin:18px 0 10px;color:#6b4b83;font-size:15px}
+.gameplay-screen{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;gap:10px;padding:12px;background:radial-gradient(circle at 50% 20%,#263d67,#101827 70%);color:#fff}
+.game-hud{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:9px 12px;border:1px solid #64748b;border-radius:13px;background:#172033;font-size:12px}
+.game-hud button{padding:7px 10px;border:0;border-radius:9px;color:#fff;background:#7c3aed;font-weight:800}
+.arena,.shooter-stage{position:relative;flex:1;min-height:0;overflow:hidden;border:2px solid #64748b;border-radius:18px;background:linear-gradient(135deg,#243a46,#172d35 55%,#1d273a)}
+.arena-grid{position:absolute;inset:0;opacity:.28;background-image:linear-gradient(#8da5ad22 1px,transparent 1px),linear-gradient(90deg,#8da5ad22 1px,transparent 1px);background-size:32px 32px}
+.arena-player,.arena-enemy,.arena-shot,.shooter-player,.shooter-enemy,.shooter-shot{position:absolute;transform:translate(-50%,-50%)}
+.arena-player{z-index:3;width:28px;height:28px;border:3px solid #dbeafe;border-radius:9px;background:#38bdf8;box-shadow:0 0 16px #38bdf899}
+.arena-player.hit{filter:brightness(2)}
+.arena-enemy{z-index:2;width:25px;height:25px;border:2px solid #fecaca;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef444488}
+.arena-enemy.boss{width:43px;height:43px;border:3px solid #fcd34d;background:#9333ea;box-shadow:0 0 20px #a855f7}
+.arena-enemy i{position:absolute;left:0;right:0;bottom:-7px;height:3px;background:#4ade80;border-radius:4px}
+.arena-shot{z-index:4;width:7px;height:7px;border-radius:50%;background:#fde68a;box-shadow:0 0 8px #fbbf24}
+.game-controls{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:112px;padding:5px 12px}
+.move-pad{display:grid;justify-items:center;gap:4px}
+.move-pad>div{display:flex;gap:5px}
+.move-pad button,.shooter-controls button{width:48px;height:42px;border:1px solid #94a3b8;border-radius:12px;color:#fff;background:#334155;font-size:18px;font-weight:900;touch-action:none;user-select:none}
+.fire-button{width:94px;height:74px;border:3px solid #fca5a5;border-radius:50%;color:#fff;background:linear-gradient(145deg,#ef4444,#991b1b);font-size:18px;font-weight:900;touch-action:none;user-select:none}
+.shooter-stage{background:radial-gradient(ellipse at 50% 100%,#233b63,#080e20 75%)}
+.shooter-player{bottom:7%;top:auto;width:30px;height:30px;border:3px solid #bfdbfe;border-radius:7px;background:#38bdf8;box-shadow:0 0 15px #38bdf8}
+.shooter-enemy{width:24px;height:24px;border:2px solid #fda4af;border-radius:50%;background:#e11d48}
+.shooter-shot{width:5px;height:15px;border-radius:5px;background:#fde68a;box-shadow:0 0 8px #facc15}
+.shooter-controls{justify-content:center}
+.shooter-controls button{width:76px;height:56px}
+.daily-box{pointer-events:auto}.daily-box button{border:0;background:transparent;font-size:42px;cursor:pointer;filter:drop-shadow(0 4px 5px #0004)}
+@media(max-width:600px){.gameplay-screen{padding:7px;gap:7px}.game-hud{font-size:10px;padding:7px}.game-controls{min-height:96px}.move-pad button{width:43px;height:38px}.fire-button{width:82px;height:66px}}
