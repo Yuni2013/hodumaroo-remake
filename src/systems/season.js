@@ -3,7 +3,7 @@ export function addSeasonPoints(save, amount) {
   save.season ??= { points:0, claimed:[] };
   save.season.points += Math.max(0,amount);
 }
-export function seasonLevel(save) { return Math.floor((save.season?.points ?? 0) / 100) + 1; }
+export function seasonLevel(save) { return Math.floor((save.season?.points ?? 0) / 100); }
 export function claimSeasonReward(save, reward) {
   save.season ??= {points:0,claimed:[]};
   if (seasonLevel(save) < reward.level || save.season.claimed.includes(reward.level)) return false;
