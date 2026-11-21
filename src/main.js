@@ -112,7 +112,7 @@ function renderCombat(){
  let stage=app.querySelector(".gameplay-screen");
  if(!stage){
   stage=document.createElement("section");stage.className="gameplay-screen";
-  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="game-controls"><div class="move-pad"><button data-hold="up">▲</button><div><button data-hold="left">◀</button><button data-hold="down">▼</button><button data-hold="right">▶</button></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
+  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="game-controls"><div class="move-pad"><button data-hold="up">▲</button><div><button data-hold="left">◀</button><button data-hold="down">▼</button><button data-hold="right">▶</button></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
   app.append(stage);
  }
  stage.querySelector(".hud-title").textContent=currentMode==="tower"?"무한의 탑 "+r.wave+"층":"웨이브 "+r.wave;
@@ -127,7 +127,7 @@ function renderShooter(){
  let stage=app.querySelector(".gameplay-screen");
  if(!stage){
   stage=document.createElement("section");stage.className="gameplay-screen";
-  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><b>우주 전투</b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="shooter-stage"></div><div class="game-controls shooter-controls"><button data-hold="left">◀</button><button data-hold="right">▶</button></div>`;
+  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b>우주 전투</b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="shooter-stage"></div><div class="game-controls shooter-controls"><button data-hold="left">◀</button><button data-hold="right">▶</button></div>`;
   app.append(stage);
  }
  stage.querySelector(".hud-hp").textContent="HP "+r.player.hp;
@@ -161,7 +161,7 @@ function finishRun(won){
  if(save.records.kills>=10)save.achievements.ten_kills={...(save.achievements.ten_kills??{}),completed:true,claimed:!!save.achievements.ten_kills?.claimed};
  save.achievements.first_run={...(save.achievements.first_run??{}),completed:true,claimed:!!save.achievements.first_run?.claimed};
  if(won)save.achievements.first_victory={...(save.achievements.first_victory??{}),completed:true,claimed:!!save.achievements.first_victory?.claimed};
- persist();activeRun=null;
+ persist();activeRun=null;app.querySelector(".gameplay-screen")?.remove();
  panel(won?"전투 승리":"전투 종료",`<div class="panel-stats"><span>처치 ${r.kills}</span><span>코인 +${coins}</span><span>에너지 +${energy}</span><span>EXP +${exp}</span></div><p class="panel-note">${level.levels? "레벨 업! "+level.levels+"회 상승했습니다.": "전투 기록을 저장했습니다."}</p>${btn("로비로","home")}`);
 }
 function renderWaveClear(){
@@ -215,7 +215,8 @@ function openAchievements(){
 }
 function openInventory(){
  const entries=Object.entries(save.progression.inventory).filter(([,n])=>n>0);
- panel("인벤토리",entries.length?`<div class="system-list">${entries.map(([id,n])=>row(id,"보유 수량 "+n,"")).join("")}</div>`:'<p class="panel-note">보유 아이템이 없습니다.</p>');
+ const list=entries.map(([id,n])=>row(id,"보유 수량 "+n,id==="small_medkit"?btn("사용","use-medkit",id,!activeRun):"")).join("");
+ panel("인벤토리",list?`<div class="system-list">${list}</div>`:'<p class="panel-note">보유 아이템이 없습니다.</p>');
 }
 function openPets(){
  const list=content.PET_DEFS.map(p=>{const owned=(save.collections?.pets??[]).includes(p.id),active=save.progression.activePet===p.id;return card(p.name,p.description,"해금 조건: "+p.unlock,owned?(active?btn("장착 중","noop","",true):btn("장착","equip-pet",p.id)):btn("잠김","noop","",true));}).join("");
@@ -254,7 +255,7 @@ function handle(action,id){
  case "jobs":openJobs();break;case "buy-job":{const res=purchaseJob(save,catalog.JOBS.find(x=>x.id===id));status(res.message);persist();openJobs();break;}case "equip-job":equipJob(save,catalog.JOBS.find(x=>x.id===id));persist();openJobs();break;
  case "upgrades":openUpgrades();break;case "upgrade":{const i=catalog.PERMANENT_UPGRADES.find(x=>x.id===id),lv=save.progression.upgrades[id]??0,cost=getUpgradeCost(i,lv);if(lv<i.max&&save.player.energy>=cost){save.player.energy-=cost;save.progression.upgrades[id]=lv+1;persist();openUpgrades();}break;}
  case "equipment":openEquipment();break;case "buy-equipment":{const res=purchaseEquipment(save,catalog.EQUIPMENT.find(x=>x.id===id));status(res.message);persist();openEquipment();break;}case "equip-item":equipItem(save,catalog.EQUIPMENT.find(x=>x.id===id));persist();openEquipment();break;
- case "weapons":openWeapons();break;case "inventory":openInventory();break;case "quests":openQuests();break;case "achievements":openAchievements();break;case "pets":openPets();break;case "relics":openRelics();break;
+ case "weapons":openWeapons();break;case "inventory":openInventory();break;case "use-medkit":{if(activeRun&&(save.progression.inventory.small_medkit??0)>0){save.progression.inventory.small_medkit--;if(currentMode==="shooter")activeRun.player.hp=Math.min(3,activeRun.player.hp+1);else activeRun.player.hp=Math.min(activeRun.player.maxHp,activeRun.player.hp+35);persist();closePanel();status("회복 키트를 사용했습니다.");}break;}case "quests":openQuests();break;case "achievements":openAchievements();break;case "pets":openPets();break;case "relics":openRelics();break;
  case "daily":openDaily();break;case "daily-claim":{const r=claimDailyReward(save);status(r.ok?"일일 보상을 받았습니다.":"아직 보상 수령 시간이 아닙니다.");persist();openDaily();break;}
  case "season":openSeason();break;case "season-claim":{const r=content.SEASON_REWARDS.find(x=>x.level===Number(id));if(claimSeasonReward(save,r)){persist();openSeason();status("시즌 보상을 받았습니다.");}break;}
  case "events":openEvents();break;case "event-claim":{const e=content.EVENT_DEFS.find(x=>x.id===id);if(claimEventReward(save,e)){persist();openEvents();}break;}
@@ -271,10 +272,10 @@ function handle(action,id){
  case "star":openSimple("차원의 별","별 시스템은 별도 콘텐츠 규칙을 정한 뒤 추가합니다.");break;
  case "audio":save.settings.bgmEnabled=!save.settings.bgmEnabled;persist();break;
  case "weapons-menu":openWeapons();break;
- case "leave-game":stopGameLoop();activeRun=null;closePanel();updateLobby();break;
+ case "leave-game":stopGameLoop();activeRun=null;app.querySelector(".gameplay-screen")?.remove();closePanel();updateLobby();break;
  case "next-wave":if(nextArenaWave(activeRun)){closePanel();startGameLoop();renderCombat();}break;
  case "end-run":finishRun(true);break;
- case "home":stopGameLoop();activeRun=null;closePanel();break;
+ case "home":stopGameLoop();activeRun=null;app.querySelector(".gameplay-screen")?.remove();closePanel();break;
  case "tower-choice":{const r=activeRun;let carryHp=r.player.hp;if(id==="treasure")grantReward(save,{coins:100,energy:15});if(id==="rest")carryHp=Math.min(r.player.maxHp,carryHp+Math.ceil(r.player.maxHp*.4));persist();closePanel();activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.player.hp=carryHp;activeRun.tower=r.tower;startGameLoop();renderCombat();break;}
  case "tower-next":{const r=activeRun;activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.player.hp=r.player.hp;activeRun.tower=r.tower;closePanel();startGameLoop();renderCombat();break;}
  case "noop":break;
