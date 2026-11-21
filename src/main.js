@@ -11,6 +11,7 @@ import { purchaseJob, equipJob, purchaseEquipment, equipItem } from "./systems/l
 import { claimDailyReward, dailyRemaining, rotateQuestPeriod } from "./systems/daily.js";
 import { equipCollection, enchantEquipment, redeemCoupon } from "./systems/collections.js";
 import { addSeasonPoints, seasonLevel, claimSeasonReward, addEventProgress, claimEventReward } from "./systems/season.js";
+import { chooseTraitOptions, applyTrait, TRAIT_DEFS } from "./systems/traits.js";
 import { createTowerRun, resolveTowerFloor, TOWER_UPGRADES, towerUpgradeCost, buyTowerUpgrade } from "./engines/roguelike/tower.js";
 import { startArena, moveArenaPlayer, fireArena, stepArena, nextArenaWave } from "./engines/combat/simulation.js";
 import { startShooter, stepShooter } from "./engines/shooter/simulation.js";
@@ -81,7 +82,7 @@ function startCombat(mapId="training_ground",mode="waves"){
 function startTower(){
  closePanel();currentMode="tower";
  const tower=createTowerRun(save);
- activeRun={...startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:tower.floor}),tower};
+ activeRun={...startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:tower.floor,mode:tower.floor%100===0?"boss":"waves"}),tower};
  save.records.runs++;persist();startGameLoop();renderCombat();
 }
 function startShooterRun(){
@@ -103,7 +104,7 @@ function loop(now){
   stepArena(activeRun,dt,now);renderCombat();
  }
  if(activeRun.status==="lost"){finishRun(false);return;}
- if(activeRun.status==="won"){finishRun(true);return;}
+ if(activeRun.status==="won"){if(currentMode==="tower")towerFloorClear();else finishRun(true);return;}
  if(activeRun.status==="wave-clear"){if(currentMode==="tower")towerFloorClear();else renderWaveClear();return;}
  gameFrame=requestAnimationFrame(loop);
 }
@@ -115,7 +116,7 @@ function renderCombat(){
   stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="game-controls"><div class="move-pad"><button data-hold="up">▲</button><div><button data-hold="left">◀</button><button data-hold="down">▼</button><button data-hold="right">▶</button></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
   app.append(stage);
  }
- stage.querySelector(".hud-title").textContent=currentMode==="tower"?"무한의 탑 "+r.wave+"층":"웨이브 "+r.wave;
+ stage.querySelector(".hud-title").textContent=currentMode==="tower"?(r.wave%100===0?"탑의 주인 · "+r.wave+"층":"무한의 탑 "+r.wave+"층"):(r.mode==="boss"?"보스전":r.mode==="challenge"?"도전 모드":"웨이브 "+r.wave);
  stage.querySelector(".hud-hp").textContent="HP "+Math.max(0,Math.ceil(r.player.hp))+"/"+r.player.maxHp;
  stage.querySelector(".hud-kills").textContent="처치 "+r.kills;
  stage.querySelector(".hud-score").textContent="점수 "+r.score;
@@ -138,7 +139,7 @@ function renderShooter(){
 function finishRun(won){
  stopGameLoop();
  const r=activeRun;if(!r)return;
- const coins=won?Math.max(20,r.kills*3+r.wave*8):r.kills*2;
+ const coins=Math.floor((won?Math.max(20,r.kills*3+(r.wave??1)*8):r.kills*2)*(r.coinRate??1));
  const energy=won?Math.max(2,Math.floor(r.wave/2)):0;
  const exp=r.kills*5+(won?25:0);
  grantReward(save,{coins,energy});
@@ -168,7 +169,8 @@ function finishRun(won){
 }
 function renderWaveClear(){
  stopGameLoop();const r=activeRun;
- panel("웨이브 클리어",`<div class="panel-stats"><span>웨이브 ${r.wave}</span><span>처치 ${r.kills}</span><span>체력 ${Math.ceil(r.player.hp)}/${r.player.maxHp}</span></div><p class="panel-note">다음 웨이브로 진행할 수 있습니다.</p>${btn("다음 웨이브","next-wave")}${btn("이번 전투 종료","end-run")}`);
+ const options=chooseTraitOptions(r,3).map(t=>card(t.name,t.description,"이번 전투에만 적용",btn("선택","choose-trait",t.id))).join("");
+ panel("웨이브 클리어",`<div class="panel-stats"><span>웨이브 ${r.wave}</span><span>처치 ${r.kills}</span><span>체력 ${Math.ceil(r.player.hp)}/${r.player.maxHp}</span></div><p class="panel-note">특성 하나를 선택하세요. 같은 특성을 다시 선택하면 효과가 누적됩니다.</p><div class="panel-grid">${options}</div><div style="margin-top:12px">${btn("특성 없이 진행","next-wave")}${btn("이번 전투 종료","end-run")}</div>`);
 }
 function towerFloorClear(){
  stopGameLoop();const r=activeRun;
@@ -276,6 +278,7 @@ function handle(action,id){
  case "weapons-menu":openWeapons();break;
  case "leave-game":stopGameLoop();activeRun=null;app.querySelector(".gameplay-screen")?.remove();closePanel();updateLobby();break;
  case "next-wave":if(nextArenaWave(activeRun)){closePanel();startGameLoop();renderCombat();}break;
+ case "choose-trait":{const trait=TRAIT_DEFS.find(t=>t.id===id);if(trait&&activeRun){applyTrait(activeRun,trait);if(nextArenaWave(activeRun)){closePanel();startGameLoop();renderCombat();}}break;}
  case "end-run":finishRun(true);break;
  case "home":stopGameLoop();activeRun=null;app.querySelector(".gameplay-screen")?.remove();closePanel();break;
  case "tower-choice":{const r=activeRun;let carryHp=r.player.hp;if(id==="treasure")grantReward(save,{coins:100,energy:15});if(id==="rest")carryHp=Math.min(r.player.maxHp,carryHp+Math.ceil(r.player.maxHp*.4));persist();closePanel();activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.player.hp=carryHp;activeRun.tower=r.tower;startGameLoop();renderCombat();break;}
