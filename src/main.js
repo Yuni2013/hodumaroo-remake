@@ -59,7 +59,7 @@ function openMode(id){
 function getWeapon(){const id=save.progression.equipment.weapon??"starter_blaster";return content.WEAPON_DEFS.find(w=>w.id===id)||content.WEAPON_DEFS[0];}
 function startCombat(mapId="training_ground"){
  closePanel();currentMode="combat";
- const stats=getPlayerStats(save,catalog);
+ const stats=getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS});
  activeRun={...startArena({stats,weapon:getWeapon()}),mapId};
  save.records.runs++;save.records.modeRuns=(save.records.modeRuns??0)+1;
  persist();startGameLoop();renderCombat();
@@ -67,12 +67,12 @@ function startCombat(mapId="training_ground"){
 function startTower(){
  closePanel();currentMode="tower";
  const tower=createTowerRun(save);
- activeRun={...startArena({stats:getPlayerStats(save,catalog),weapon:getWeapon(),wave:tower.floor}),tower};
+ activeRun={...startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:tower.floor}),tower};
  save.records.runs++;persist();startGameLoop();renderCombat();
 }
 function startShooterRun(){
  closePanel();currentMode="shooter";
- activeRun=startShooter(getPlayerStats(save,catalog));
+ activeRun=startShooter(getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}));
  save.records.runs++;persist();startGameLoop();renderShooter();
 }
 function stopGameLoop(){cancelAnimationFrame(gameFrame);gameFrame=0;hold={x:0,y:0,fire:false};}
@@ -128,9 +128,9 @@ function finishRun(won){
  const exp=r.kills*5+(won?25:0);
  grantReward(save,{coins,energy});
  const level=addExperience(save,exp);
- save.records.kills+=r.kills;
+ save.records.kills+=r.kills;\n save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);\n if(save.records.bossKills>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");\n if(save.records.bossKills>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");\n if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");\n if(save.records.towerBest>=10&&!save.collections.relics.includes("guard_emblem"))save.collections.relics.push("guard_emblem");
  if(won)save.records.wins++;
- addSeasonPoints(save,Math.max(1,r.kills*2));
+ addSeasonPoints(save,Math.max(1,r.kills*2));\n const questDefs=[...catalog.QUEST_DEFS,{id:"daily_wave",target:2,metric:"runs",period:"daily",reward:{coins:100}},{id:"daily_kills",target:15,metric:"kills",period:"daily",reward:{energy:15}},{id:"daily_score",target:200,metric:"coinsEarned",period:"daily",reward:{coins:150}},{id:"weekly_runs",target:10,metric:"runs",period:"weekly",reward:{coins:500}},{id:"weekly_kills",target:100,metric:"kills",period:"weekly",reward:{energy:80}}];\n for(const [metric,amount] of [["runs",1],["kills",r.kills],["coinsEarned",coins]]) for(const q of questDefs.filter(q=>q.metric===metric)){const state=save.quests[q.id]??{progress:0,completed:false,claimed:false};state.progress=Math.min(q.target,state.progress+amount);state.period=q.period??"basic";state.completed=state.progress>=q.target;save.quests[q.id]=state;}\n save.records.coinsEarned=(save.records.coinsEarned??0)+coins;
  addEventProgress(save,"welcome_week",1);
  if(r.kills)save.quests.kill_10={...(save.quests.kill_10??{progress:0}),progress:Math.min(10,(save.quests.kill_10?.progress??0)+r.kills),completed:(save.quests.kill_10?.progress??0)+r.kills>=10};
  if(save.records.kills>=10)save.achievements.ten_kills={completed:true,claimed:false};
@@ -164,7 +164,7 @@ function openJobs(){
  panel("직업",`<div class="panel-grid">${list}</div>`);
 }
 function openUpgrades(){
- const stats=getPlayerStats(save,catalog);
+ const stats=getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS});
  const list=catalog.PERMANENT_UPGRADES.map(i=>{const lv=save.progression.upgrades[i.id]??0,cost=getUpgradeCost(i,lv);return row(i.name,`${i.description} · Lv.${lv}/${i.max} · ${cost} 에너지`,btn("강화","upgrade",i.id,lv>=i.max||save.player.energy<cost));}).join("");
  panel("영구 업그레이드",`<div class="panel-stats"><span>HP ${stats.maxHp}</span><span>공격 ${stats.damage}</span><span>방어 ${stats.defense}</span><span>에너지 ${save.player.energy}</span></div><div class="system-list">${list}</div>`);
 }
@@ -247,8 +247,8 @@ function handle(action,id){
  case "next-wave":if(nextArenaWave(activeRun)){closePanel();startGameLoop();renderCombat();}break;
  case "end-run":finishRun(true);break;
  case "home":stopGameLoop();activeRun=null;closePanel();break;
- case "tower-choice":{const r=activeRun;if(id==="treasure"){save.player.coins+=100;save.player.energy+=15;}if(id==="rest")r.player.hp=Math.min(r.player.maxHp,r.player.hp+Math.ceil(r.player.maxHp*.4));persist();closePanel();r.tower.floor++;r.wave=r.tower.floor;activeRun=startArena({stats:getPlayerStats(save,catalog),weapon:getWeapon(),wave:r.tower.floor});activeRun.tower=r.tower;startGameLoop();renderCombat();break;}
- case "tower-next":{const r=activeRun;r.tower.floor++;activeRun=startArena({stats:getPlayerStats(save,catalog),weapon:getWeapon(),wave:r.tower.floor});activeRun.tower=r.tower;closePanel();startGameLoop();renderCombat();break;}
+ case "tower-choice":{const r=activeRun;if(id==="treasure"){save.player.coins+=100;save.player.energy+=15;}if(id==="rest")r.player.hp=Math.min(r.player.maxHp,r.player.hp+Math.ceil(r.player.maxHp*.4));persist();closePanel();r.wave=r.tower.floor;activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.tower=r.tower;startGameLoop();renderCombat();break;}
+ case "tower-next":{const r=activeRun;activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.tower=r.tower;closePanel();startGameLoop();renderCombat();break;}
  case "noop":break;
  }
 }
