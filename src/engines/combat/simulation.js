@@ -1,6 +1,6 @@
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function startArena({stats,weapon,wave=1}) {
-  return {status:"playing",wave,kills:0,score:0,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],nextId:1,spawned:0,waveGoal:5+wave*2,invulnerable:0};
+  return {status:"playing",wave,kills:0,bossKills:0,score:0,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],nextId:1,spawned:0,waveGoal:5+wave*2,invulnerable:0};
 }
 export function moveArenaPlayer(run,dx,dy,dt) {
   if(run.status!=="playing")return;
@@ -36,7 +36,7 @@ export function stepArena(run,dt,now=performance.now()) {
   for(const shot of run.projectiles){shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;}
   for(const shot of run.projectiles){
     const hit=run.enemies.find(enemy=>Math.hypot(enemy.x-shot.x,enemy.y-shot.y)<.035);
-    if(hit){hit.hp-=shot.damage;shot.dead=true;if(hit.hp<=0){hit.dead=true;run.kills++;run.score+=hit.boss?100:10;}}
+    if(hit){hit.hp-=shot.damage;shot.dead=true;if(hit.hp<=0){hit.dead=true;run.kills++;if(hit.boss)run.bossKills++;run.score+=hit.boss?100:10;}}
     if(shot.x<0||shot.x>1||shot.y<0||shot.y>1)shot.dead=true;
   }
   run.projectiles=run.projectiles.filter(s=>!s.dead);
