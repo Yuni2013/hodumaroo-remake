@@ -1,7 +1,7 @@
 import { createMovementGimmick, modifyMovementInput } from "./movement-gimmicks.js";
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function startArena({stats,weapon,wave=1,gimmick=null,mode="waves"}) {
-  return {status:"playing",mode,wave,kills:0,bossKills:0,score:0,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],nextId:1,spawned:0,waveGoal:mode==="boss"?1:mode==="challenge"?9999:5+wave*2,invulnerable:0};
+  return {status:"playing",mode,wave,kills:0,bossKills:0,score:0,coinRate:stats.coinRate??1,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],nextId:1,spawned:0,waveGoal:mode==="boss"?1:mode==="challenge"?9999:5+wave*2,invulnerable:0};
 }
 export function moveArenaPlayer(run,dx,dy,dt) {
   if(run.status!=="playing")return;
