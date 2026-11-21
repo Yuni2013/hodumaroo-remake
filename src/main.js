@@ -146,9 +146,11 @@ function finishRun(won){
  save.records.kills+=r.kills;
  if(currentMode==="shooter")save.records.shooterBest=Math.max(save.records.shooterBest??0,r.score??0);
  save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
- if(save.records.bossKills>=11&&!save.progression.unlockedWorlds.includes("world2"))save.progression.unlockedWorlds.push("world2");
- if(save.records.bossKills>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
- if(save.records.bossKills>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");
+ save.records.clearedBosses??=[];
+ if(won&&currentMode==="combat"&&r.bossKills>0&&!save.records.clearedBosses.includes(r.mapId))save.records.clearedBosses.push(r.mapId);
+ if(save.records.clearedBosses.length>=11&&!save.progression.unlockedWorlds.includes("world2"))save.progression.unlockedWorlds.push("world2");
+ if(save.records.clearedBosses.length>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
+ if(save.records.clearedBosses.length>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");
  if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");
  if(save.records.towerBest>=10&&!save.collections.relics.includes("guard_emblem"))save.collections.relics.push("guard_emblem");
  if(won)save.records.wins++;
