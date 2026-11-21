@@ -1,13 +1,16 @@
+import { createMovementGimmick, modifyMovementInput } from "./movement-gimmicks.js";
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-export function startArena({stats,weapon,wave=1}) {
+export function startArena({stats,weapon,wave=1,gimmick=null}) {
   return {status:"playing",wave,kills:0,bossKills:0,score:0,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],nextId:1,spawned:0,waveGoal:5+wave*2,invulnerable:0};
 }
 export function moveArenaPlayer(run,dx,dy,dt) {
   if(run.status!=="playing")return;
+  const input=modifyMovementInput(run.gimmick,run.player,dx,dy,dt);
+  dx=input.dx;dy=input.dy;
   const length=Math.hypot(dx,dy)||1;
   const speed=0.48*run.player.stats.speed;
-  run.player.x=clamp(run.player.x+dx/length*speed*dt,0.035,0.965);
-  run.player.y=clamp(run.player.y+dy/length*speed*dt,0.06,0.94);
+  run.player.x=clamp(run.player.x+(dx/length*speed+input.extraX)*dt,0.035,0.965);
+  run.player.y=clamp(run.player.y+(dy/length*speed+input.extraY)*dt,0.06,0.94);
 }
 export function fireArena(run,now=performance.now()) {
   if(run.status!=="playing"||now-run.lastShot<run.weapon.cooldown)return false;
