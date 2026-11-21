@@ -20,6 +20,11 @@ export function getPlayerStats(save, catalog) {
     for (const [key, value] of Object.entries(item.bonus ?? {})) acc[key] = (acc[key] ?? 0) + value;
     return acc;
   }, {});
+  const pet = catalog.PET_DEFS?.find(item => item.id === save.progression.activePet);
+  const relic = catalog.RELIC_DEFS?.find(item => item.id === save.progression.activeRelic);
+  for (const item of [pet, relic]) {
+    for (const [key, value] of Object.entries(item?.bonus ?? {})) bonus[key] = (bonus[key] ?? 0) + value;
+  }
   return {
     maxHp: save.player.maxHp + (upgrades.health ?? 0) * 10 + (job.bonus.maxHp ?? 0) + (bonus.maxHp ?? 0),
     damage: save.player.damage + (upgrades.damage ?? 0) + (job.bonus.damage ?? 0),
