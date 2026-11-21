@@ -45,7 +45,11 @@ function openPlay(){
  const modes=catalog.GAME_MODES.map(m=>card(m.name,m.description,"독립 엔진",btn("시작","mode",m.id,m.id==="shooter"&&!save.progression.unlockedWorlds.includes("world3")))).join("");
  panel("플레이",`<h3 class="section-title">월드</h3><div class="system-list">${worlds}</div><h3 class="section-title">게임 모드</h3><div class="panel-grid">${modes}</div><div style="margin-top:14px">${btn("탑 영구 강화","tower-upgrades")}</div>`);
 }
-function openTowerUpgrades(){\n const list=TOWER_UPGRADES.map(item=>{const level=save.tower.permanent?.[item.id]??0,cost=towerUpgradeCost(item,level);return row(item.name,`${item.description} · Lv.${level}/${item.max} · ${cost} 정수`,btn("강화","tower-upgrade",item.id,level>=item.max||save.tower.essence<cost));}).join("");\n panel("탑 영구 강화",`<div class="panel-stats"><span>탑의 정수 ${save.tower.essence}</span></div><div class="system-list">${list}</div>`);\n}\nfunction openMapModes(mapId){
+function openTowerUpgrades(){
+ const list=TOWER_UPGRADES.map(item=>{const level=save.tower.permanent?.[item.id]??0,cost=towerUpgradeCost(item,level);return row(item.name,`${item.description} · Lv.${level}/${item.max} · ${cost} 정수`,btn("강화","tower-upgrade",item.id,level>=item.max||save.tower.essence<cost));}).join("");
+ panel("탑 영구 강화",`<div class="panel-stats"><span>탑의 정수 ${save.tower.essence}</span></div><div class="system-list">${list}</div>`);
+}
+function openMapModes(mapId){
  const map=content.MAP_DEFS.find(item=>item.id===mapId);
  panel(map?.name??"맵 선택",`<p class="panel-note">전투 유형을 선택하세요.</p><div class="panel-grid">
  ${card("일반 웨이브","적 무리를 차례로 상대합니다.","기본 전투",btn("시작","start-combat",mapId+"|waves"))}
