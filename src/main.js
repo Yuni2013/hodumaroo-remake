@@ -128,9 +128,17 @@ function finishRun(won){
  const exp=r.kills*5+(won?25:0);
  grantReward(save,{coins,energy});
  const level=addExperience(save,exp);
- save.records.kills+=r.kills;\n save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);\n if(save.records.bossKills>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");\n if(save.records.bossKills>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");\n if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");\n if(save.records.towerBest>=10&&!save.collections.relics.includes("guard_emblem"))save.collections.relics.push("guard_emblem");
+ save.records.kills+=r.kills;
+ save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
+ if(save.records.bossKills>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
+ if(save.records.bossKills>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");
+ if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");
+ if(save.records.towerBest>=10&&!save.collections.relics.includes("guard_emblem"))save.collections.relics.push("guard_emblem");
  if(won)save.records.wins++;
- addSeasonPoints(save,Math.max(1,r.kills*2));\n const questDefs=[...catalog.QUEST_DEFS,{id:"daily_wave",target:2,metric:"runs",period:"daily",reward:{coins:100}},{id:"daily_kills",target:15,metric:"kills",period:"daily",reward:{energy:15}},{id:"daily_score",target:200,metric:"coinsEarned",period:"daily",reward:{coins:150}},{id:"weekly_runs",target:10,metric:"runs",period:"weekly",reward:{coins:500}},{id:"weekly_kills",target:100,metric:"kills",period:"weekly",reward:{energy:80}}];\n for(const [metric,amount] of [["runs",1],["kills",r.kills],["coinsEarned",coins]]) for(const q of questDefs.filter(q=>q.metric===metric)){const state=save.quests[q.id]??{progress:0,completed:false,claimed:false};state.progress=Math.min(q.target,state.progress+amount);state.period=q.period??"basic";state.completed=state.progress>=q.target;save.quests[q.id]=state;}\n save.records.coinsEarned=(save.records.coinsEarned??0)+coins;
+ addSeasonPoints(save,Math.max(1,r.kills*2));
+ const questDefs=[...catalog.QUEST_DEFS,{id:"daily_wave",target:2,metric:"runs",period:"daily",reward:{coins:100}},{id:"daily_kills",target:15,metric:"kills",period:"daily",reward:{energy:15}},{id:"daily_score",target:200,metric:"coinsEarned",period:"daily",reward:{coins:150}},{id:"weekly_runs",target:10,metric:"runs",period:"weekly",reward:{coins:500}},{id:"weekly_kills",target:100,metric:"kills",period:"weekly",reward:{energy:80}}];
+ for(const [metric,amount] of [["runs",1],["kills",r.kills],["coinsEarned",coins]]) for(const q of questDefs.filter(q=>q.metric===metric)){const state=save.quests[q.id]??{progress:0,completed:false,claimed:false};state.progress=Math.min(q.target,state.progress+amount);state.period=q.period??"basic";state.completed=state.progress>=q.target;save.quests[q.id]=state;}
+
  addEventProgress(save,"welcome_week",1);
  if(r.kills)save.quests.kill_10={...(save.quests.kill_10??{progress:0}),progress:Math.min(10,(save.quests.kill_10?.progress??0)+r.kills),completed:(save.quests.kill_10?.progress??0)+r.kills>=10};
  if(save.records.kills>=10)save.achievements.ten_kills={completed:true,claimed:false};
@@ -148,7 +156,9 @@ function towerFloorClear(){
  const outcome=resolveTowerFloor(save,r.tower,"victory");
  save.tower.essence=save.tower.essence??0;
  save.records.towerBest=Math.max(save.records.towerBest,outcome.floor);
- save.player.coins+=15+outcome.floor*3;save.player.energy+=1+Math.floor(outcome.floor/5);
+ if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");
+ if(save.records.towerBest>=10&&!save.collections.relics.includes("guard_emblem"))save.collections.relics.push("guard_emblem");
+ grantReward(save,{coins:15+outcome.floor*3,energy:1+Math.floor(outcome.floor/5)});
  persist();
  if(outcome.type==="choice"){
   const choices=content.TOWER_CHOICES.map(c=>card(c.name,c.description,"탑 선택",btn("선택","tower-choice",c.id))).join("");
