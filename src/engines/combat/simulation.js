@@ -28,7 +28,9 @@ export function stepArena(run,dt,now=performance.now()) {
   if(run.spawned<run.waveGoal&&now-run.lastSpawn>Math.max(350,1300-run.wave*35)){
     const side=Math.floor(Math.random()*4),pos=Math.random()*0.8+0.1;
     const point=side===0?{x:0.04,y:pos}:side===1?{x:0.96,y:pos}:side===2?{x:pos,y:0.07}:{x:pos,y:0.93};
-    run.enemies.push({id:run.nextId++,...point,hp:run.mode==="boss"?220:18+run.wave*5,maxHp:run.mode==="boss"?220:18+run.wave*5,speed:0.10+Math.min(.09,run.wave*.004),boss:run.mode==="boss"||(run.spawned===run.waveGoal-1&&run.wave%5===0)});
+    const isBoss=run.mode==="boss"||(run.spawned===run.waveGoal-1&&run.wave%5===0);
+    const enemyHp=isBoss?220+run.wave*10:18+run.wave*5;
+    run.enemies.push({id:run.nextId++,...point,hp:enemyHp,maxHp:enemyHp,speed:0.10+Math.min(.09,run.wave*.004),boss:isBoss});
     run.spawned++;run.lastSpawn=now;
   }
   for(const enemy of run.enemies){
