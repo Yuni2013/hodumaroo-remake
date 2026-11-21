@@ -58,7 +58,7 @@ function openMapModes(mapId){
  ${card("도전 모드","90초 동안 버티며 점수를 얻습니다.","시간 제한",btn("시작","start-combat",mapId+"|challenge"))}
  </div>`);
 }
-function openWorld(id){
+function openWorld(id){\n if(!save.progression.unlockedWorlds.includes(id)){status("아직 해금되지 않은 월드입니다.");return;}
  const maps=content.MAP_DEFS.filter(m=>m.world===id);
  const weapons=content.WEAPON_DEFS.map(w=>{const owned=(save.progression.ownedWeapons??["starter_blaster"]).includes(w.id);return card(w.name,w.description,`공격 ${w.damage} · 가격 ${w.price} 코인`,owned?btn("무기 선택","choose-weapon",w.id):btn("구매","buy-weapon",w.id,save.player.coins<w.price));}).join("");
  const mapCards=maps.map(m=>card(m.name,m.description,"임시 테스트 맵",btn("맵 선택","choose-map",m.id))).join("")||'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다. 확정되지 않은 맵 이름을 임의로 추가하지 않았습니다.</p>';
