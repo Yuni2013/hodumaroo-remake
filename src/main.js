@@ -129,6 +129,7 @@ function finishRun(won){
  grantReward(save,{coins,energy});
  const level=addExperience(save,exp);
  save.records.kills+=r.kills;
+ if(currentMode==="shooter")save.records.shooterBest=Math.max(save.records.shooterBest??0,r.score??0);
  save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
  if(save.records.bossKills>=11&&!save.progression.unlockedWorlds.includes("world2"))save.progression.unlockedWorlds.push("world2");
  if(save.records.bossKills>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
@@ -160,6 +161,7 @@ function towerFloorClear(){
  if(save.records.towerBest>=5&&!save.collections.relics.includes("steady_core"))save.collections.relics.push("steady_core");
  if(save.records.towerBest>=10&&!save.collections.relics.includes("guard_emblem"))save.collections.relics.push("guard_emblem");
  grantReward(save,{coins:15+outcome.floor*3,energy:1+Math.floor(outcome.floor/5)});
+ addExperience(save,10+outcome.floor*5);addSeasonPoints(save,10+outcome.floor*2);
  persist();
  if(outcome.type==="choice"){
   const choices=content.TOWER_CHOICES.map(c=>card(c.name,c.description,"탑 선택",btn("선택","tower-choice",c.id))).join("");
@@ -258,8 +260,8 @@ function handle(action,id){
  case "next-wave":if(nextArenaWave(activeRun)){closePanel();startGameLoop();renderCombat();}break;
  case "end-run":finishRun(true);break;
  case "home":stopGameLoop();activeRun=null;closePanel();break;
- case "tower-choice":{const r=activeRun;if(id==="treasure"){save.player.coins+=100;save.player.energy+=15;}if(id==="rest")r.player.hp=Math.min(r.player.maxHp,r.player.hp+Math.ceil(r.player.maxHp*.4));persist();closePanel();r.wave=r.tower.floor;activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.tower=r.tower;startGameLoop();renderCombat();break;}
- case "tower-next":{const r=activeRun;activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.tower=r.tower;closePanel();startGameLoop();renderCombat();break;}
+ case "tower-choice":{const r=activeRun;let carryHp=r.player.hp;if(id==="treasure")grantReward(save,{coins:100,energy:15});if(id==="rest")carryHp=Math.min(r.player.maxHp,carryHp+Math.ceil(r.player.maxHp*.4));persist();closePanel();activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.player.hp=carryHp;activeRun.tower=r.tower;startGameLoop();renderCombat();break;}
+ case "tower-next":{const r=activeRun;activeRun=startArena({stats:getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS}),weapon:getWeapon(),wave:r.tower.floor});activeRun.player.hp=r.player.hp;activeRun.tower=r.tower;closePanel();startGameLoop();renderCombat();break;}
  case "noop":break;
  }
 }
