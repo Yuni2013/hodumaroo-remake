@@ -32,6 +32,7 @@ export const PERMANENT_UPGRADES = [
 export const SHOP_ITEMS = [
   { id: "small_medkit", name: "소형 회복 키트", price: 50, description: "전투 중 체력 회복 아이템", kind: "consumable" },
   { id: "energy_cell", name: "에너지 셀", price: 80, description: "에너지 +10", kind: "resource", energy: 10 },
+  { id: "starship", name: "소형 우주선", price: 1500, description: "월드 3 우주 전투를 해금합니다.", kind: "unlock", unlock: "world3" },
 ];
 export const ACHIEVEMENT_DEFS = [
   { id: "first_run", name: "첫 출전", description: "전투를 처음 시작하기", reward: { coins: 50 } },
