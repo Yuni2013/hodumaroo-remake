@@ -94,22 +94,31 @@ function loop(now){
 }
 function renderCombat(){
  const r=activeRun;if(!r)return;
- const enemies=r.enemies.map(e=>`<div class="arena-enemy ${e.boss?"boss":""}" style="left:${e.x*100}%;top:${e.y*100}%"><i style="width:${Math.max(0,e.hp/e.maxHp*100)}%"></i></div>`).join("");
- const shots=r.projectiles.map(s=>`<div class="arena-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("");
- const player=`<div class="arena-player ${r.invulnerable>0?"hit":""}" style="left:${r.player.x*100}%;top:${r.player.y*100}%"></div>`;
- app.querySelector(".screen-layer")?.remove();
- const stage=document.createElement("section");stage.className="gameplay-screen";
- stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><b>${currentMode==="tower"?"무한의 탑 "+r.wave+"층":"웨이브 "+r.wave}</b><span>HP ${Math.max(0,Math.ceil(r.player.hp))}/${r.player.maxHp}</span><span>처치 ${r.kills}</span><span>점수 ${r.score}</span></header><div class="arena"><div class="arena-grid"></div>${enemies}${shots}${player}</div><div class="game-controls"><div class="move-pad"><button data-hold="up">▲</button><div><button data-hold="left">◀</button><button data-hold="down">▼</button><button data-hold="right">▶</button></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
- app.append(stage);
+ let stage=app.querySelector(".gameplay-screen");
+ if(!stage){
+  stage=document.createElement("section");stage.className="gameplay-screen";
+  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="game-controls"><div class="move-pad"><button data-hold="up">▲</button><div><button data-hold="left">◀</button><button data-hold="down">▼</button><button data-hold="right">▶</button></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
+  app.append(stage);
+ }
+ stage.querySelector(".hud-title").textContent=currentMode==="tower"?"무한의 탑 "+r.wave+"층":"웨이브 "+r.wave;
+ stage.querySelector(".hud-hp").textContent="HP "+Math.max(0,Math.ceil(r.player.hp))+"/"+r.player.maxHp;
+ stage.querySelector(".hud-kills").textContent="처치 "+r.kills;
+ stage.querySelector(".hud-score").textContent="점수 "+r.score;
+ const arena=stage.querySelector(".arena");
+ arena.innerHTML='<div class="arena-grid"></div>'+r.enemies.map(e=>`<div class="arena-enemy ${e.boss?"boss":""}" style="left:${e.x*100}%;top:${e.y*100}%"><i style="width:${Math.max(0,e.hp/e.maxHp*100)}%"></i></div>`).join("")+r.projectiles.map(s=>`<div class="arena-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+`<div class="arena-player ${r.invulnerable>0?"hit":""}" style="left:${r.player.x*100}%;top:${r.player.y*100}%"></div>`;
 }
 function renderShooter(){
  const r=activeRun;if(!r)return;
- app.querySelector(".gameplay-screen")?.remove();
- const stage=document.createElement("section");stage.className="gameplay-screen";
- const enemies=r.enemies.map(e=>`<div class="shooter-enemy" style="left:${e.x*100}%;top:${e.y*100}%"></div>`).join("");
- const shots=r.shots.map(s=>`<div class="shooter-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("");
- stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><b>우주 전투</b><span>HP ${r.player.hp}</span><span>처치 ${r.kills}</span><span>점수 ${r.score}</span></header><div class="shooter-stage">${enemies}${shots}<div class="shooter-player" style="left:${r.player.x*100}%"></div></div><div class="game-controls shooter-controls"><button data-hold="left">◀</button><button data-hold="right">▶</button></div>`;
- app.append(stage);
+ let stage=app.querySelector(".gameplay-screen");
+ if(!stage){
+  stage=document.createElement("section");stage.className="gameplay-screen";
+  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><b>우주 전투</b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="shooter-stage"></div><div class="game-controls shooter-controls"><button data-hold="left">◀</button><button data-hold="right">▶</button></div>`;
+  app.append(stage);
+ }
+ stage.querySelector(".hud-hp").textContent="HP "+r.player.hp;
+ stage.querySelector(".hud-kills").textContent="처치 "+r.kills;
+ stage.querySelector(".hud-score").textContent="점수 "+r.score;
+ stage.querySelector(".shooter-stage").innerHTML=r.enemies.map(e=>`<div class="shooter-enemy" style="left:${e.x*100}%;top:${e.y*100}%"></div>`).join("")+r.shots.map(s=>`<div class="shooter-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+`<div class="shooter-player" style="left:${r.player.x*100}%"></div>`;
 }
 function finishRun(won){
  stopGameLoop();
@@ -137,7 +146,7 @@ function renderWaveClear(){
 function towerFloorClear(){
  stopGameLoop();const r=activeRun;
  const outcome=resolveTowerFloor(save,r.tower,"victory");
- save.tower.essence=r.tower.essence??save.tower.essence;
+ save.tower.essence=save.tower.essence??0;
  save.records.towerBest=Math.max(save.records.towerBest,outcome.floor);
  save.player.coins+=15+outcome.floor*3;save.player.energy+=1+Math.floor(outcome.floor/5);
  persist();
@@ -201,7 +210,6 @@ function openEvents(){
  panel("이벤트",`<div class="system-list">${list}</div>`);
 }
 function openEnchant(){
- const owned=Object.entries(save.progression.inventory).filter(([,n])=>n>0&&catalog.EQUIPMENT.some(i=>i.id===arguments[0]));
  const list=catalog.EQUIPMENT.filter(i=>(save.progression.inventory[i.id]??0)>0).map(i=>{const lv=save.enchant?.[i.id]??0,cost=50+lv*75;return row(i.name,`강화 +${lv} · 비용 ${cost} 에너지`,btn("강화","enchant",i.id,save.player.energy<cost));}).join("");
  panel("인챈트",list?`<div class="system-list">${list}</div>`:'<p class="panel-note">강화할 장비가 없습니다. 상점에서 장비를 구매하세요.</p>');
 }
