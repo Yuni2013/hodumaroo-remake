@@ -52,11 +52,11 @@ function openTowerUpgrades(){
 }
 function openMapModes(mapId){
  const map=content.MAP_DEFS.find(item=>item.id===mapId);
- panel(map?.name??"맵 선택",`<p class="panel-note">전투 유형을 선택하세요.</p><div class="panel-grid">
- ${card("일반 웨이브","적 무리를 차례로 상대합니다.","기본 전투",btn("시작","start-combat",mapId+"|waves"))}
- ${card("보스전","강력한 보스 한 명과 대결합니다.","보스 전투",btn("시작","start-combat",mapId+"|boss"))}
- ${card("도전 모드","90초 동안 버티며 점수를 얻습니다.","시간 제한",btn("시작","start-combat",mapId+"|challenge"))}
- </div>`);
+ const bosses=(map?.bossIds??[]).map(id=>content.BOSS_DEFS.find(b=>b.id===id)).filter(Boolean);
+ const bossCards=bosses.map(b=>card(b.name,b.description,'고유 보스 패턴',btn('도전','start-combat',mapId+'|boss|'+b.id))).join('');
+ const waveCard=card('일반 웨이브','적 무리를 차례로 상대합니다.','기본 전투',btn('시작','start-combat',mapId+'|waves'));
+ const challengeCard=card('도전 모드','90초 동안 버티며 점수를 얻습니다.','시간 제한',btn('시작','start-combat',mapId+'|challenge'));
+ panel(map?.name??'맵 선택','<p class="panel-note">'+safe(map?.description??'전투 유형을 선택하세요.')+'</p><div class="panel-grid">'+waveCard+challengeCard+'</div><h3 class="section-title">이 지역의 보스</h3><div class="panel-grid">'+(bossCards||'<p class="panel-note">이 맵에는 별도 보스전이 없습니다.</p>')+'</div>');
 }
 function openWorld(id){
  if(!save.progression.unlockedWorlds.includes(id)){status("아직 해금되지 않은 월드입니다.");return;}
@@ -72,11 +72,12 @@ function openMode(id){
  startShooterRun();
 }
 function getWeapon(){const id=save.progression.equipment.weapon??"starter_blaster";return {...(content.WEAPON_DEFS.find(w=>w.id===id)||content.WEAPON_DEFS[0])};}
-function startCombat(mapId="training_ground",mode="waves"){
+function startCombat(mapId="training_ground",mode="waves",bossId=null){
  closePanel();currentMode="combat";
  const stats=getPlayerStats(save,{...catalog,PET_DEFS:content.PET_DEFS,RELIC_DEFS:content.RELIC_DEFS});
  const map=content.MAP_DEFS.find(item=>item.id===mapId);
- activeRun={...startArena({stats,weapon:getWeapon(),mode,gimmick:map?.gimmick}),mapId};
+ const boss=content.BOSS_DEFS.find(item=>item.id===bossId)??null;
+ activeRun={...startArena({stats,weapon:getWeapon(),mode,gimmick:map?.gimmick,boss}),mapId,bossId};
  save.records.runs++;save.records.modeRuns=(save.records.modeRuns??0)+1;
  persist();startGameLoop();renderCombat();
 }
@@ -149,7 +150,7 @@ function finishRun(won){
  if(currentMode==="shooter")save.records.shooterBest=Math.max(save.records.shooterBest??0,r.score??0);
  save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
  save.records.clearedBosses??=[];
- if(currentMode==="combat"&&r.bossKills>0&&!save.records.clearedBosses.includes(r.mapId))save.records.clearedBosses.push(r.mapId);
+ if(currentMode==="combat"&&r.bossKills>0){const clearedId=r.bossId??r.mapId;if(!save.records.clearedBosses.includes(clearedId))save.records.clearedBosses.push(clearedId);}
  if(save.records.clearedBosses.length>=11&&!save.progression.unlockedWorlds.includes("world2"))save.progression.unlockedWorlds.push("world2");
  if(save.records.clearedBosses.length>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
  if(save.records.clearedBosses.length>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");
@@ -254,7 +255,7 @@ function openSimple(title,msg){panel(title,`<p class="panel-note">${safe(msg)}</
 function handle(action,id){
  switch(action){
  case "close":closePanel();break;case "play":openPlay();break;case "tower-upgrades":openTowerUpgrades();break;case "tower-upgrade":{const item=TOWER_UPGRADES.find(x=>x.id===id),res=buyTowerUpgrade(save,item);status(res.message);persist();openTowerUpgrades();break;}case "mode":openMode(id);break;case "world":openWorld(id);break;
- case "choose-map":openMapModes(id);break;case "start-combat":{const [mapId,mode]=id.split("|");startCombat(mapId,mode);break;}case "choose-weapon":save.progression.equipment.weapon=id;persist();status("무기를 선택했습니다.");openWorld("world1");break;
+ case "choose-map":openMapModes(id);break;case "start-combat":{const [mapId,mode,bossId]=id.split("|");startCombat(mapId,mode,bossId??null);break;}case "choose-weapon":save.progression.equipment.weapon=id;persist();status("무기를 선택했습니다.");openWorld("world1");break;
  case "buy-weapon":{const w=content.WEAPON_DEFS.find(x=>x.id===id);if(save.player.coins>=w.price){save.player.coins-=w.price;save.progression.ownedWeapons??=["starter_blaster"];save.progression.ownedWeapons.push(id);persist();openWeapons();}else status("코인이 부족합니다.");break;}
  case "shop":openShop();break;case "buy-shop":{const i=catalog.SHOP_ITEMS.find(x=>x.id===id);const res=buyShopItem(save,i);status(res.message);persist();openShop();break;}
  case "jobs":openJobs();break;case "buy-job":{const res=purchaseJob(save,catalog.JOBS.find(x=>x.id===id));status(res.message);persist();openJobs();break;}case "equip-job":equipJob(save,catalog.JOBS.find(x=>x.id===id));persist();openJobs();break;
