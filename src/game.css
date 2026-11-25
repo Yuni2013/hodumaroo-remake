@@ -24,3 +24,5 @@
 .shooter-controls button{width:76px;height:56px}
 .daily-box{pointer-events:auto}.daily-box button{border:0;background:transparent;font-size:42px;cursor:pointer;filter:drop-shadow(0 4px 5px #0004)}
 @media(max-width:600px){.gameplay-screen{padding:7px;gap:7px}.game-hud{font-size:10px;padding:7px}.game-controls{min-height:96px}.move-pad button{width:43px;height:38px}.fire-button{width:82px;height:66px}}
+
+.arena-hostile-shot{position:absolute;width:11px;height:11px;border-radius:50%;background:#ff8c55;box-shadow:0 0 9px #ff6b3d;transform:translate(-50%,-50%);pointer-events:none}
