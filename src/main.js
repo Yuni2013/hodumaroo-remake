@@ -62,7 +62,7 @@ function openWorld(id){
  if(!save.progression.unlockedWorlds.includes(id)){status("아직 해금되지 않은 월드입니다.");return;}
  const maps=content.MAP_DEFS.filter(m=>m.world===id);
  const weapons=content.WEAPON_DEFS.map(w=>{const owned=(save.progression.ownedWeapons??["starter_blaster"]).includes(w.id);return card(w.name,w.description,`공격 ${w.damage} · 가격 ${w.price} 코인`,owned?btn("무기 선택","choose-weapon",w.id):btn("구매","buy-weapon",w.id,save.player.coins<w.price));}).join("");
- const mapCards=maps.map(m=>card(m.name,m.description,"보스 "+(m.bossIds??[]).length+"종 · "+(m.gimmick?.type??"기본 이동"),btn("맵 선택","choose-map",m.id))).join("")||'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다. 확정되지 않은 맵 이름을 임의로 추가하지 않았습니다.</p>';
+ const mapCards=maps.map(m=>card(m.name,m.description,"보스 "+(m.bossIds??[]).length+"종 · "+(m.gimmick?.type??"기본 이동"),btn("맵 선택","choose-map",m.id))).join("")||'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다.</p>';
  panel(content.WORLD_DEFS.find(w=>w.id===id)?.name??"월드",`<h3 class="section-title">맵 선택</h3><div class="panel-grid">${mapCards}</div><h3 class="section-title">무기 선택</h3><div class="panel-grid">${weapons}</div>`);
 }
 function openMode(id){
@@ -150,7 +150,7 @@ function finishRun(won){
  if(currentMode==="shooter")save.records.shooterBest=Math.max(save.records.shooterBest??0,r.score??0);
  save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
  save.records.clearedBosses??=[];
- if(currentMode==="combat"&&r.bossKills>0){const clearedId=r.bossId??r.mapId;if(!save.records.clearedBosses.includes(clearedId))save.records.clearedBosses.push(clearedId);}
+ if(currentMode==="combat"&&r.bossKills>0&&r.bossId){if(!save.records.clearedBosses.includes(r.bossId))save.records.clearedBosses.push(r.bossId);}
  if(save.records.clearedBosses.length>=11&&!save.progression.unlockedWorlds.includes("world2"))save.progression.unlockedWorlds.push("world2");
  if(save.records.clearedBosses.length>=3&&!save.collections.pets.includes("spark"))save.collections.pets.push("spark");
  if(save.records.clearedBosses.length>=6&&!save.collections.pets.includes("moss"))save.collections.pets.push("moss");
