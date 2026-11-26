@@ -26,3 +26,7 @@
 @media(max-width:600px){.gameplay-screen{padding:7px;gap:7px}.game-hud{font-size:10px;padding:7px}.game-controls{min-height:96px}.move-pad button{width:43px;height:38px}.fire-button{width:82px;height:66px}}
 
 .arena-hostile-shot{position:absolute;width:11px;height:11px;border-radius:50%;background:#ff8c55;box-shadow:0 0 9px #ff6b3d;transform:translate(-50%,-50%);pointer-events:none}
+
+.arena-enemy.elite{width:33px;height:33px;border:3px solid #fde047;background:#ea580c;box-shadow:0 0 16px #f59e0b,0 0 26px #f59e0b66}
+.arena-enemy.elite i{height:4px;background:#fde047}
+.hud-elites{color:#fde68a;font-weight:800}
