@@ -123,7 +123,7 @@ function renderCombat(){
  stage.querySelector(".hud-kills").textContent="처치 "+r.kills;
  stage.querySelector(".hud-score").textContent="점수 "+r.score;
  const arena=stage.querySelector(".arena");
- arena.innerHTML='<div class="arena-grid"></div>'+r.enemies.map(e=>`<div class="arena-enemy ${e.boss?"boss":""}" style="left:${e.x*100}%;top:${e.y*100}%"><i style="width:${Math.max(0,e.hp/e.maxHp*100)}%"></i></div>`).join("")+r.projectiles.map(s=>`<div class="arena-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+`<div class="arena-player ${r.invulnerable>0?"hit":""}" style="left:${r.player.x*100}%;top:${r.player.y*100}%"></div>`;
+ arena.innerHTML='<div class="arena-grid"></div>'+r.enemies.map(e=>`<div class="arena-enemy ${e.boss?"boss":""}" style="left:${e.x*100}%;top:${e.y*100}%"><i style="width:${Math.max(0,e.hp/e.maxHp*100)}%"></i></div>`).join("")+r.projectiles.map(s=>`<div class="arena-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+r.enemyShots.map(s=>`<div class="arena-hostile-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+`<div class="arena-player ${r.invulnerable>0?"hit":""}" style="left:${r.player.x*100}%;top:${r.player.y*100}%"></div>`;
 }
 function renderShooter(){
  const r=activeRun;if(!r)return;
