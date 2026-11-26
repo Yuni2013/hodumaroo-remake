@@ -65,7 +65,7 @@ function openWorld(id,index=0){
  const weapons=content.WEAPON_DEFS.map(w=>{const owned=(save.progression.ownedWeapons??["starter_blaster"]).includes(w.id);return card(w.name,w.description,`공격 ${w.damage} · 가격 ${w.price} 코인`,owned?btn("무기 선택","choose-weapon",w.id):btn("구매","buy-weapon",w.id,save.player.coins<w.price));}).join("");
  const gimmickNames={reverse:"방향 반전",ice:"빙판 관성",attraction:"중앙으로 끌림"};
  const mapPanel=selected?`<div class="map-carousel">
-  <div class="map-preview"><span class="map-preview-mark">✦</span><span class="map-preview-name">${safe(selected.name)}</span><small>WORLD MAP</small></div>
+  <div class="map-preview" style="--map-hue:${(maps.indexOf(selected)*41+92)%360}"><div class="map-terrain terrain-a"></div><div class="map-terrain terrain-b"></div><div class="map-terrain terrain-c"></div><span class="map-preview-mark">✦</span><span class="map-preview-name">${safe(selected.name)}</span><small>WORLD MAP · ${String(index+1).padStart(2,"0")}</small></div>
   <div class="map-carousel-nav"><button class="map-nav-button" data-action="map-prev" data-id="${id}|${Math.max(0,index-1)}" ${index<=0?"disabled":""}>◀</button><span>${index+1} / ${maps.length}</span><button class="map-nav-button" data-action="map-next" data-id="${id}|${Math.min(maps.length-1,index+1)}" ${index>=maps.length-1?"disabled":""}>▶</button></div>
   <div class="map-info"><h3>${safe(selected.name)}</h3><p>${safe(selected.description)}</p><div class="map-tags"><span>보스 ${(selected.bossIds??[]).length}종</span><span>${safe(gimmickNames[selected.gimmick?.type]??"기본 이동")}</span></div>${btn("이 맵 선택","choose-map",selected.id)}</div>
  </div>`:'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다.</p>';
