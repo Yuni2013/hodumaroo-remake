@@ -12,9 +12,11 @@
 .arena-enemy i{position:absolute;left:0;right:0;bottom:-7px;height:3px;background:#4ade80;border-radius:4px}
 .arena-shot{z-index:4;width:7px;height:7px;border-radius:50%;background:#fde68a;box-shadow:0 0 8px #fbbf24}
 .game-controls{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:112px;padding:5px 12px}
-.move-pad{display:grid;justify-items:center;gap:4px}
-.move-pad>div{display:flex;gap:5px}
-.move-pad button,.shooter-controls button{width:48px;height:42px;border:1px solid #94a3b8;border-radius:12px;color:#fff;background:#334155;font-size:18px;font-weight:900;touch-action:none;user-select:none}
+.dynamic-joystick-zone{position:relative;width:min(42vw,190px);height:104px;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none}
+.dynamic-joystick-base{width:92px;height:92px;border:2px solid #94a3b8;border-radius:50%;background:#334155aa;display:grid;place-items:center;opacity:.42;transition:opacity .12s}
+.dynamic-joystick-base.active{opacity:.95}
+.dynamic-joystick-knob{width:42px;height:42px;border:2px solid #dbeafe;border-radius:50%;background:linear-gradient(145deg,#93c5fd,#2563eb);box-shadow:0 3px 12px #0008;transition:transform .035s linear;pointer-events:none}
+.shooter-controls button{width:48px;height:42px;border:1px solid #94a3b8;border-radius:12px;color:#fff;background:#334155;font-size:18px;font-weight:900;touch-action:none;user-select:none}
 .fire-button{width:94px;height:74px;border:3px solid #fca5a5;border-radius:50%;color:#fff;background:linear-gradient(145deg,#ef4444,#991b1b);font-size:18px;font-weight:900;touch-action:none;user-select:none}
 .shooter-stage{background:radial-gradient(ellipse at 50% 100%,#233b63,#080e20 75%)}
 .shooter-player{bottom:7%;top:auto;width:30px;height:30px;border:3px solid #bfdbfe;border-radius:7px;background:#38bdf8;box-shadow:0 0 15px #38bdf8}
@@ -30,3 +32,8 @@
 .arena-enemy.elite{width:33px;height:33px;border:3px solid #fde047;background:#ea580c;box-shadow:0 0 16px #f59e0b,0 0 26px #f59e0b66}
 .arena-enemy.elite i{height:4px;background:#fde047}
 .hud-elites{color:#fde68a;font-weight:800}
+
+/* Dynamic touch joystick */
+.dynamic-joystick-zone{touch-action:none}
+.game-controls{touch-action:pan-y}
+@media(max-width:600px){.dynamic-joystick-zone{width:42vw;height:92px}.dynamic-joystick-base{width:84px;height:84px}.dynamic-joystick-knob{width:40px;height:40px}}
