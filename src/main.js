@@ -115,15 +115,16 @@ function renderCombat(){
  let stage=app.querySelector(".gameplay-screen");
  if(!stage){
   stage=document.createElement("section");stage.className="gameplay-screen";
-  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="game-controls"><div class="move-pad"><button data-hold="up">▲</button><div><button data-hold="left">◀</button><button data-hold="down">▼</button><button data-hold="right">▶</button></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
+  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-elites"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="game-controls"><div class="move-pad"><button data-hold="up">▲</button><div><button data-hold="left">◀</button><button data-hold="down">▼</button><button data-hold="right">▶</button></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
   app.append(stage);
  }
  stage.querySelector(".hud-title").textContent=currentMode==="tower"?(r.wave%100===0?"탑의 주인 · "+r.wave+"층":"무한의 탑 "+r.wave+"층"):(r.mode==="boss"?"보스전":r.mode==="challenge"?"도전 모드":"웨이브 "+r.wave);
  stage.querySelector(".hud-hp").textContent="HP "+Math.max(0,Math.ceil(r.player.hp))+"/"+r.player.maxHp;
  stage.querySelector(".hud-kills").textContent="처치 "+r.kills;
+ stage.querySelector(".hud-elites").textContent="엘리트 "+(r.eliteKills??0);
  stage.querySelector(".hud-score").textContent="점수 "+r.score;
  const arena=stage.querySelector(".arena");
- arena.innerHTML='<div class="arena-grid"></div>'+r.enemies.map(e=>`<div class="arena-enemy ${e.boss?"boss":""}" style="left:${e.x*100}%;top:${e.y*100}%"><i style="width:${Math.max(0,e.hp/e.maxHp*100)}%"></i></div>`).join("")+r.projectiles.map(s=>`<div class="arena-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+r.enemyShots.map(s=>`<div class="arena-hostile-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+`<div class="arena-player ${r.invulnerable>0?"hit":""}" style="left:${r.player.x*100}%;top:${r.player.y*100}%"></div>`;
+ arena.innerHTML='<div class="arena-grid"></div>'+r.enemies.map(e=>`<div class="arena-enemy ${e.boss?"boss":e.elite?"elite":""}" style="left:${e.x*100}%;top:${e.y*100}%"><i style="width:${Math.max(0,e.hp/e.maxHp*100)}%"></i></div>`).join("")+r.projectiles.map(s=>`<div class="arena-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+r.enemyShots.map(s=>`<div class="arena-hostile-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+`<div class="arena-player ${r.invulnerable>0?"hit":""}" style="left:${r.player.x*100}%;top:${r.player.y*100}%"></div>`;
 }
 function renderShooter(){
  const r=activeRun;if(!r)return;
@@ -141,12 +142,14 @@ function renderShooter(){
 function finishRun(won){
  stopGameLoop();
  const r=activeRun;if(!r)return;
- const coins=Math.floor((won?Math.max(20,r.kills*3+(r.wave??1)*8):r.kills*2)*(r.coinRate??1));
+ const eliteBonus=(r.eliteKills??0)*12;
+ const coins=Math.floor(((won?Math.max(20,r.kills*3+(r.wave??1)*8):r.kills*2)+eliteBonus)*(r.coinRate??1));
  const energy=won?Math.max(2,Math.floor(r.wave/2)):0;
- const exp=r.kills*5+(won?25:0);
+ const exp=r.kills*5+(r.eliteKills??0)*3+(won?25:0);
  grantReward(save,{coins,energy});
  const level=addExperience(save,exp);
  save.records.kills+=r.kills;
+ save.records.eliteKills=(save.records.eliteKills??0)+(r.eliteKills??0);
  if(currentMode==="shooter")save.records.shooterBest=Math.max(save.records.shooterBest??0,r.score??0);
  save.records.bossKills=(save.records.bossKills??0)+(r.bossKills??0);
  save.records.clearedBosses??=[];
@@ -166,7 +169,7 @@ function finishRun(won){
  save.achievements.first_run={...(save.achievements.first_run??{}),completed:true,claimed:!!save.achievements.first_run?.claimed};
  if(won)save.achievements.first_victory={...(save.achievements.first_victory??{}),completed:true,claimed:!!save.achievements.first_victory?.claimed};
  persist();activeRun=null;app.querySelector(".gameplay-screen")?.remove();
- panel(won?"전투 승리":"전투 종료",`<div class="panel-stats"><span>처치 ${r.kills}</span><span>코인 +${coins}</span><span>에너지 +${energy}</span><span>EXP +${exp}</span></div><p class="panel-note">${level.levels? "레벨 업! "+level.levels+"회 상승했습니다.": "전투 기록을 저장했습니다."}</p>${btn("로비로","home")}`);
+ panel(won?"전투 승리":"전투 종료",`<div class="panel-stats"><span>처치 ${r.kills}</span><span>엘리트 처치 ${r.eliteKills??0}</span><span>코인 +${coins} (엘리트 보너스 ${eliteBonus})</span><span>에너지 +${energy}</span><span>EXP +${exp}</span></div><p class="panel-note">${level.levels? "레벨 업! "+level.levels+"회 상승했습니다.": "전투 기록을 저장했습니다."}</p>${btn("로비로","home")}`);
 }
 function renderWaveClear(){
  stopGameLoop();const r=activeRun;
