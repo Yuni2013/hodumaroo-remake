@@ -121,7 +121,7 @@ function renderCombat(){
  let stage=app.querySelector(".gameplay-screen");
  if(!stage){
   stage=document.createElement("section");stage.className="gameplay-screen";
-  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-elites"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="game-controls"><div class="dynamic-joystick-zone" aria-label="이동 조이스틱"><div class="dynamic-joystick-base"><div class="dynamic-joystick-knob"></div></div></div><button class="fire-button" data-hold="fire">공격</button></div>`;
+  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-elites"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="dynamic-joystick-zone" aria-label="이동 조이스틱"><div class="dynamic-joystick-base"><div class="dynamic-joystick-knob"></div></div></div><div class="game-controls"><button class="fire-button" data-hold="fire">공격</button></div>`;
   app.append(stage);
  }
  stage.querySelector(".hud-title").textContent=currentMode==="tower"?(r.wave%100===0?"탑의 주인 · "+r.wave+"층":"무한의 탑 "+r.wave+"층"):(r.mode==="boss"?"보스전":r.mode==="challenge"?"도전 모드":"웨이브 "+r.wave);
@@ -301,11 +301,11 @@ app.addEventListener("click",e=>{
  const a=e.target.closest("[data-action]");if(a){handle(a.dataset.action,a.dataset.id);return;}
  const h=e.target.closest("[data-hold]");if(h){const v=h.dataset.hold;if(v==="fire"){hold.fire=true;fireArena(activeRun);}else if(v==="left")hold.x=-1;else if(v==="right")hold.x=1;else if(v==="up")hold.y=-1;else if(v==="down")hold.y=1;}
 });
-let joystickPointer=null;
+let joystickPointer=null,firePointer=null;
 const joystickZone=()=>app.querySelector(".dynamic-joystick-zone");
 app.addEventListener("pointerdown",e=>{
  const zone=e.target.closest(".dynamic-joystick-zone");
- if(zone&&!joystickPointer){
+ if(zone&&joystickPointer===null){
   e.preventDefault();joystickPointer=e.pointerId;zone.setPointerCapture?.(e.pointerId);
   const rect=zone.getBoundingClientRect(),base=zone.querySelector(".dynamic-joystick-base");
   const x=e.clientX-rect.left,y=e.clientY-rect.top;
@@ -313,22 +313,25 @@ app.addEventListener("pointerdown",e=>{
   updateJoystick(e,zone);return;
  }
  const h=e.target.closest("[data-hold]");
- if(h&&h.dataset.hold==="fire"){e.preventDefault();hold.fire=true;fireArena(activeRun);}
+ if(h&&h.dataset.hold==="fire"&&firePointer===null){e.preventDefault();firePointer=e.pointerId;h.setPointerCapture?.(e.pointerId);hold.fire=true;fireArena(activeRun);}
 });
 function updateJoystick(e,zone){
- const knob=zone.querySelector(".dynamic-joystick-knob"),rect=zone.getBoundingClientRect(),radius=43;
+ const knob=zone.querySelector(".dynamic-joystick-knob"),rect=zone.getBoundingClientRect(),radius=42;
  const dx=e.clientX-rect.left-Number(zone.dataset.centerX),dy=e.clientY-rect.top-Number(zone.dataset.centerY);
  const len=Math.hypot(dx,dy)||1,scale=Math.min(1,radius/len),ox=dx*scale,oy=dy*scale;
- knob.style.transform=`translate(${ox}px,${oy}px)`;hold.x=Math.abs(ox)<7?0:ox/radius;hold.y=Math.abs(oy)<7?0:oy/radius;
+ knob.style.transform=`translate(${ox}px,${oy}px)`;
+ hold.x=Math.abs(ox)<5?0:ox/radius;hold.y=Math.abs(oy)<5?0:oy/radius;
 }
 window.addEventListener("pointermove",e=>{if(joystickPointer!==e.pointerId)return;const zone=joystickZone();if(zone)updateJoystick(e,zone);});
 function releasePointer(e){
  if(joystickPointer===e.pointerId){
   const zone=joystickZone();zone?.querySelector(".dynamic-joystick-base")?.classList.remove("active");
-  const knob=zone?.querySelector(".dynamic-joystick-knob");if(knob)knob.style.transform="translate(0,0)";
+  const base=zone?.querySelector(".dynamic-joystick-base"),knob=zone?.querySelector(".dynamic-joystick-knob");
+  if(base){base.style.left="";base.style.top="";}
+  if(knob)knob.style.transform="translate(0,0)";
   joystickPointer=null;hold.x=0;hold.y=0;
  }
- if(e.pointerType==="touch"||e.pointerType==="pen")hold.fire=false;
+ if(firePointer===e.pointerId){firePointer=null;hold.fire=false;}
 }
 window.addEventListener("pointerup",releasePointer);window.addEventListener("pointercancel",releasePointer);
 window.addEventListener("keydown",e=>{if(!activeRun)return;const k=e.key.toLowerCase();if(k==="arrowleft"||k==="a")hold.x=-1;if(k==="arrowright"||k==="d")hold.x=1;if(k==="arrowup"||k==="w")hold.y=-1;if(k==="arrowdown"||k==="s")hold.y=1;if(k===" "){e.preventDefault();hold.fire=true;}});
