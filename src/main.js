@@ -58,12 +58,18 @@ function openMapModes(mapId){
  const challengeCard=card('도전 모드','90초 동안 버티며 점수를 얻습니다.','시간 제한',btn('시작','start-combat',mapId+'|challenge'));
  panel(map?.name??'맵 선택','<p class="panel-note">'+safe(map?.description??'전투 유형을 선택하세요.')+'</p><div class="panel-grid">'+waveCard+challengeCard+'</div><h3 class="section-title">이 지역의 보스</h3><div class="panel-grid">'+(bossCards||'<p class="panel-note">이 맵에는 별도 보스전이 없습니다.</p>')+'</div>');
 }
-function openWorld(id){
+function openWorld(id,index=0){
  if(!save.progression.unlockedWorlds.includes(id)){status("아직 해금되지 않은 월드입니다.");return;}
  const maps=content.MAP_DEFS.filter(m=>m.world===id);
+ const selected=maps.length?maps[Math.max(0,Math.min(index,maps.length-1))]:null;
  const weapons=content.WEAPON_DEFS.map(w=>{const owned=(save.progression.ownedWeapons??["starter_blaster"]).includes(w.id);return card(w.name,w.description,`공격 ${w.damage} · 가격 ${w.price} 코인`,owned?btn("무기 선택","choose-weapon",w.id):btn("구매","buy-weapon",w.id,save.player.coins<w.price));}).join("");
- const mapCards=maps.map(m=>card(m.name,m.description,"보스 "+(m.bossIds??[]).length+"종 · "+(m.gimmick?.type??"기본 이동"),btn("맵 선택","choose-map",m.id))).join("")||'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다.</p>';
- panel(content.WORLD_DEFS.find(w=>w.id===id)?.name??"월드",`<h3 class="section-title">맵 선택</h3><div class="panel-grid">${mapCards}</div><h3 class="section-title">무기 선택</h3><div class="panel-grid">${weapons}</div>`);
+ const gimmickNames={reverse:"방향 반전",ice:"빙판 관성",attraction:"중앙으로 끌림"};
+ const mapPanel=selected?`<div class="map-carousel">
+  <div class="map-preview"><span class="map-preview-mark">✦</span><span class="map-preview-name">${safe(selected.name)}</span><small>WORLD MAP</small></div>
+  <div class="map-carousel-nav"><button class="map-nav-button" data-action="map-prev" data-id="${id}|${Math.max(0,index-1)}" ${index<=0?"disabled":""}>◀</button><span>${index+1} / ${maps.length}</span><button class="map-nav-button" data-action="map-next" data-id="${id}|${Math.min(maps.length-1,index+1)}" ${index>=maps.length-1?"disabled":""}>▶</button></div>
+  <div class="map-info"><h3>${safe(selected.name)}</h3><p>${safe(selected.description)}</p><div class="map-tags"><span>보스 ${(selected.bossIds??[]).length}종</span><span>${safe(gimmickNames[selected.gimmick?.type]??"기본 이동")}</span></div>${btn("이 맵 선택","choose-map",selected.id)}</div>
+ </div>`:'<p class="panel-note">이 월드의 맵은 아직 설계 중입니다.</p>';
+ panel(content.WORLD_DEFS.find(w=>w.id===id)?.name??"월드",`<h3 class="section-title">맵 선택</h3>${mapPanel}<h3 class="section-title">무기 선택</h3><div class="panel-grid">${weapons}</div>`);
 }
 function openMode(id){
  currentMode=id;
@@ -258,7 +264,7 @@ function openSimple(title,msg){panel(title,`<p class="panel-note">${safe(msg)}</
 function handle(action,id){
  switch(action){
  case "close":closePanel();break;case "play":openPlay();break;case "tower-upgrades":openTowerUpgrades();break;case "tower-upgrade":{const item=TOWER_UPGRADES.find(x=>x.id===id),res=buyTowerUpgrade(save,item);status(res.message);persist();openTowerUpgrades();break;}case "mode":openMode(id);break;case "world":openWorld(id);break;
- case "choose-map":openMapModes(id);break;case "start-combat":{const [mapId,mode,bossId]=id.split("|");startCombat(mapId,mode,bossId??null);break;}case "choose-weapon":save.progression.equipment.weapon=id;persist();status("무기를 선택했습니다.");openWorld("world1");break;
+ case "map-prev":case "map-next":{const [world,index]=id.split("|");openWorld(world,Number(index));break;}case "choose-map":openMapModes(id);break;case "start-combat":{const [mapId,mode,bossId]=id.split("|");startCombat(mapId,mode,bossId??null);break;}case "choose-weapon":save.progression.equipment.weapon=id;persist();status("무기를 선택했습니다.");openWorld("world1");break;
  case "buy-weapon":{const w=content.WEAPON_DEFS.find(x=>x.id===id);if(save.player.coins>=w.price){save.player.coins-=w.price;save.progression.ownedWeapons??=["starter_blaster"];save.progression.ownedWeapons.push(id);persist();openWeapons();}else status("코인이 부족합니다.");break;}
  case "shop":openShop();break;case "buy-shop":{const i=catalog.SHOP_ITEMS.find(x=>x.id===id);const res=buyShopItem(save,i);status(res.message);persist();openShop();break;}
  case "jobs":openJobs();break;case "buy-job":{const res=purchaseJob(save,catalog.JOBS.find(x=>x.id===id));status(res.message);persist();openJobs();break;}case "equip-job":equipJob(save,catalog.JOBS.find(x=>x.id===id));persist();openJobs();break;
@@ -300,26 +306,22 @@ const joystickZone=()=>app.querySelector(".dynamic-joystick-zone");
 app.addEventListener("pointerdown",e=>{
  const zone=e.target.closest(".dynamic-joystick-zone");
  if(zone&&!joystickPointer){
-  joystickPointer=e.pointerId;zone.setPointerCapture?.(e.pointerId);
-  const base=zone.querySelector(".dynamic-joystick-base"),knob=zone.querySelector(".dynamic-joystick-knob");
-  base.classList.add("active");zone.dataset.pointer=e.pointerId;
-  updateJoystick(e,zone,base,knob);return;
+  e.preventDefault();joystickPointer=e.pointerId;zone.setPointerCapture?.(e.pointerId);
+  const rect=zone.getBoundingClientRect(),base=zone.querySelector(".dynamic-joystick-base");
+  const x=e.clientX-rect.left,y=e.clientY-rect.top;
+  zone.dataset.centerX=x;zone.dataset.centerY=y;base.style.left=x+"px";base.style.top=y+"px";base.classList.add("active");
+  updateJoystick(e,zone);return;
  }
- const h=e.target.closest("[data-hold]");if(!h)return;
- if(h.dataset.hold==="fire"){hold.fire=true;fireArena(activeRun);}
+ const h=e.target.closest("[data-hold]");
+ if(h&&h.dataset.hold==="fire"){e.preventDefault();hold.fire=true;fireArena(activeRun);}
 });
-function updateJoystick(e,zone,base,knob){
- const rect=zone.getBoundingClientRect(),radius=43,cx=e.clientX-rect.left,cy=e.clientY-rect.top;
- const dx=cx-rect.width/2,dy=cy-rect.height/2,len=Math.hypot(dx,dy)||1,scale=Math.min(1,radius/len);
- const ox=dx*scale,oy=dy*scale;
- knob.style.transform=`translate(${ox}px,${oy}px)`;
- hold.x=Math.abs(ox)<7?0:ox/radius;hold.y=Math.abs(oy)<7?0:oy/radius;
+function updateJoystick(e,zone){
+ const knob=zone.querySelector(".dynamic-joystick-knob"),rect=zone.getBoundingClientRect(),radius=43;
+ const dx=e.clientX-rect.left-Number(zone.dataset.centerX),dy=e.clientY-rect.top-Number(zone.dataset.centerY);
+ const len=Math.hypot(dx,dy)||1,scale=Math.min(1,radius/len),ox=dx*scale,oy=dy*scale;
+ knob.style.transform=`translate(${ox}px,${oy}px)`;hold.x=Math.abs(ox)<7?0:ox/radius;hold.y=Math.abs(oy)<7?0:oy/radius;
 }
-window.addEventListener("pointermove",e=>{
- if(joystickPointer!==e.pointerId)return;
- const zone=joystickZone(),base=zone?.querySelector(".dynamic-joystick-base"),knob=zone?.querySelector(".dynamic-joystick-knob");
- if(zone&&base&&knob)updateJoystick(e,zone,base,knob);
-});
+window.addEventListener("pointermove",e=>{if(joystickPointer!==e.pointerId)return;const zone=joystickZone();if(zone)updateJoystick(e,zone);});
 function releasePointer(e){
  if(joystickPointer===e.pointerId){
   const zone=joystickZone();zone?.querySelector(".dynamic-joystick-base")?.classList.remove("active");
@@ -328,8 +330,7 @@ function releasePointer(e){
  }
  if(e.pointerType==="touch"||e.pointerType==="pen")hold.fire=false;
 }
-window.addEventListener("pointerup",releasePointer);
-window.addEventListener("pointercancel",releasePointer);
+window.addEventListener("pointerup",releasePointer);window.addEventListener("pointercancel",releasePointer);
 window.addEventListener("keydown",e=>{if(!activeRun)return;const k=e.key.toLowerCase();if(k==="arrowleft"||k==="a")hold.x=-1;if(k==="arrowright"||k==="d")hold.x=1;if(k==="arrowup"||k==="w")hold.y=-1;if(k==="arrowdown"||k==="s")hold.y=1;if(k===" "){e.preventDefault();hold.fire=true;}});
 window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();if(k==="arrowleft"||k==="a"||k==="arrowright"||k==="d")hold.x=0;if(k==="arrowup"||k==="w"||k==="arrowdown"||k==="s")hold.y=0;if(k===" ")hold.fire=false;});
 document.querySelector("#bgm-volume")?.addEventListener("input",e=>{save.settings.bgmVolume=Number(e.target.value);save.settings.bgmEnabled=save.settings.bgmVolume>0;persist();});
