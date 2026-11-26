@@ -50,3 +50,7 @@
 .map-nav-button{width:48px;height:42px;border:0;border-radius:12px;color:#fff;background:linear-gradient(135deg,#7c3aed,#a855f7);font-size:20px;font-weight:900}.map-nav-button:disabled{opacity:.3}
 .map-info{text-align:center;color:#49335f}.map-info h3{margin:8px 0;font-size:21px}.map-info p{margin:0 auto 12px;max-width:440px;font-size:13px;line-height:1.55;color:#715f80}
 .map-tags{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin:0 0 12px}.map-tags span{padding:5px 10px;border:1px solid #d8c4ef;border-radius:20px;color:#6b3e91;background:#f5edff;font-size:11px;font-weight:800}.map-info .action-button{min-width:160px}
+
+.auto-fire-toggle{height:44px;padding:0 12px;border:2px solid #94a3b8;border-radius:12px;color:#e2e8f0;background:#334155;font-size:12px;font-weight:900;pointer-events:auto;touch-action:manipulation}
+.auto-fire-toggle.is-on{border-color:#86efac;color:#052e16;background:linear-gradient(135deg,#bbf7d0,#4ade80);box-shadow:0 0 12px #22c55e55}
+@media(max-width:600px){.auto-fire-toggle{height:40px;padding:0 9px;font-size:11px}}
