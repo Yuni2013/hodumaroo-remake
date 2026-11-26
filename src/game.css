@@ -23,7 +23,7 @@
 .shooter-player{bottom:7%;top:auto;width:30px;height:30px;border:3px solid #bfdbfe;border-radius:7px;background:#38bdf8;box-shadow:0 0 15px #38bdf8}
 .shooter-enemy{width:24px;height:24px;border:2px solid #fda4af;border-radius:50%;background:#e11d48}
 .shooter-shot{width:5px;height:15px;border-radius:5px;background:#fde68a;box-shadow:0 0 8px #facc15}
-.shooter-controls{justify-content:center}
+.shooter-controls{position:absolute;left:50%;right:auto;bottom:12px;justify-content:center;transform:translateX(-50%);pointer-events:auto}
 .shooter-controls button{width:76px;height:56px}
 .daily-box{pointer-events:auto}.daily-box button{border:0;background:transparent;font-size:42px;cursor:pointer;filter:drop-shadow(0 4px 5px #0004)}
 @media(max-width:600px){.gameplay-screen{padding:7px;gap:7px}.game-hud{font-size:10px;padding:7px}.dynamic-joystick-zone{top:58px;bottom:88px;width:66%}.game-controls{right:10px;bottom:10px}.fire-button{width:82px;height:66px}}
