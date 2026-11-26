@@ -1,7 +1,7 @@
 import { createMovementGimmick, modifyMovementInput } from "./movement-gimmicks.js";
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function startArena({stats,weapon,wave=1,gimmick=null,mode="waves",boss=null}) {
-  return {status:"playing",mode,wave,kills:0,bossKills:0,score:0,coinRate:stats.coinRate??1,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],enemyShots:[],nextId:1,spawned:0,waveGoal:mode==="boss"?1:mode==="challenge"?9999:5+wave*2,invulnerable:0,gimmick:createMovementGimmick(gimmick?.type,gimmick??{}),boss};
+  return {status:"playing",mode,wave,kills:0,bossKills:0,eliteKills:0,score:0,coinRate:stats.coinRate??1,elapsed:0,lastSpawn:0,lastShot:0,player:{x:0.5,y:0.5,hp:stats.maxHp,maxHp:stats.maxHp,stats},weapon,enemies:[],projectiles:[],enemyShots:[],nextId:1,spawned:0,waveGoal:mode==="boss"?1:mode==="challenge"?9999:5+wave*2,invulnerable:0,gimmick:createMovementGimmick(gimmick?.type,gimmick??{}),boss};
 }
 export function moveArenaPlayer(run,dx,dy,dt) {
   if(run.status!=="playing")return;
@@ -89,8 +89,10 @@ export function stepArena(run,dt,now=performance.now()) {
     const isBoss=run.mode==="boss"||(run.spawned===run.waveGoal-1&&run.wave%5===0);
     const def=isBoss?run.boss:null;
     const enemyHp=def?.hp??(isBoss?220+run.wave*10:18+run.wave*5);
-    const enemySpeed=def?.speed??(0.10+Math.min(.09,run.wave*.004));
-    run.enemies.push({id:run.nextId++,...point,hp:enemyHp,maxHp:enemyHp,speed:enemySpeed,baseSpeed:enemySpeed,boss:isBoss,bossId:def?.id??null,pattern:def?.pattern??"chase",damage:def?.damage??7,attackTimer:0,patternTimer:0,dashTime:0});
+    const elite=!isBoss&&run.mode!=="challenge"&&Math.random()<.14;
+    const enemySpeed=def?.speed??(0.10+Math.min(.09,run.wave*.004))*(elite?1.12:1);
+    const finalHp=Math.round(enemyHp*(elite?2.4:1));
+    run.enemies.push({id:run.nextId++,...point,hp:finalHp,maxHp:finalHp,speed:enemySpeed,baseSpeed:enemySpeed,boss:isBoss,elite,bossId:def?.id??null,pattern:def?.pattern??"chase",damage:(def?.damage??7)+(elite?2:0),attackTimer:0,patternTimer:0,dashTime:0});
     run.spawned++;run.lastSpawn=now;
   }
   for(const enemy of run.enemies){
@@ -106,7 +108,7 @@ export function stepArena(run,dt,now=performance.now()) {
   for(const shot of run.enemyShots){shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;if(Math.hypot(shot.x-run.player.x,shot.y-run.player.y)<.035&&run.invulnerable<=0){run.player.hp-=Math.max(1,shot.damage-run.player.stats.defense);run.invulnerable=.65;shot.dead=true;}}
   for(const shot of run.projectiles){
     const hit=run.enemies.find(enemy=>Math.hypot(enemy.x-shot.x,enemy.y-shot.y)<.035);
-    if(hit){hit.hp-=hit.guarding?shot.damage*.6:shot.damage;shot.dead=true;if(hit.hp<=0){hit.dead=true;run.kills++;if(hit.boss)run.bossKills++;run.score+=hit.boss?100:10;}}
+    if(hit){hit.hp-=hit.guarding?shot.damage*.6:shot.damage;shot.dead=true;if(hit.hp<=0){hit.dead=true;run.kills++;if(hit.boss)run.bossKills++;if(hit.elite)run.eliteKills++;run.score+=hit.boss?100:hit.elite?35:10;}}
     if(shot.x<0||shot.x>1||shot.y<0||shot.y>1)shot.dead=true;
   }
   run.projectiles=run.projectiles.filter(s=>!s.dead);
