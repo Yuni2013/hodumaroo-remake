@@ -16,7 +16,7 @@ import { createTowerRun, resolveTowerFloor, TOWER_UPGRADES, towerUpgradeCost, bu
 import { startArena, moveArenaPlayer, fireArena, stepArena, nextArenaWave } from "./engines/combat/simulation.js";
 import { startShooter, stepShooter } from "./engines/shooter/simulation.js";
 
-let save=loadSave(), activeRun=null, gameFrame=0, lastFrame=0, hold={x:0,y:0,fire:false}, currentMode="combat";
+let save=loadSave(), activeRun=null, gameFrame=0, lastFrame=0, hold={x:0,y:0,fire:false}, currentMode="combat", autoFireEnabled=true;
 rotateQuestPeriod(save);
 const app=document.querySelector("#app");
 const money=n=>Number(n??0).toLocaleString("ko-KR");
@@ -108,7 +108,7 @@ function loop(now){
   stepShooter(activeRun,dt,now);renderShooter();
  }else{
   moveArenaPlayer(activeRun,hold.x,hold.y,dt);
-  if(hold.fire)fireArena(activeRun,now);
+  if(hold.fire||autoFireEnabled)fireArena(activeRun,now);
   stepArena(activeRun,dt,now);renderCombat();
  }
  if(activeRun.status==="lost"){finishRun(false);return;}
@@ -121,7 +121,7 @@ function renderCombat(){
  let stage=app.querySelector(".gameplay-screen");
  if(!stage){
   stage=document.createElement("section");stage.className="gameplay-screen";
-  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-elites"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="dynamic-joystick-zone" aria-label="이동 조이스틱"><div class="dynamic-joystick-base"><div class="dynamic-joystick-knob"></div></div></div><div class="game-controls"><button class="fire-button" data-hold="fire">공격</button></div>`;
+  stage.innerHTML=`<header class="game-hud"><button data-action="leave-game">나가기</button><button data-action="inventory">가방</button><b class="hud-title"></b><span class="hud-hp"></span><span class="hud-kills"></span><span class="hud-elites"></span><span class="hud-score"></span></header><div class="arena"><div class="arena-grid"></div></div><div class="dynamic-joystick-zone" aria-label="이동 조이스틱"><div class="dynamic-joystick-base"><div class="dynamic-joystick-knob"></div></div></div><div class="game-controls"><button class="auto-fire-toggle" data-action="toggle-auto-fire" aria-pressed="true">자동 발사 ON</button><button class="fire-button" data-hold="fire">공격</button></div>`;
   app.append(stage);
  }
  stage.querySelector(".hud-title").textContent=currentMode==="tower"?(r.wave%100===0?"탑의 주인 · "+r.wave+"층":"무한의 탑 "+r.wave+"층"):(r.mode==="boss"?"보스전":r.mode==="challenge"?"도전 모드":"웨이브 "+r.wave);
@@ -129,6 +129,7 @@ function renderCombat(){
  stage.querySelector(".hud-kills").textContent="처치 "+r.kills;
  stage.querySelector(".hud-elites").textContent="엘리트 "+(r.eliteKills??0);
  stage.querySelector(".hud-score").textContent="점수 "+r.score;
+ const autoButton=stage.querySelector(".auto-fire-toggle");if(autoButton){autoButton.textContent="자동 발사 "+(autoFireEnabled?"ON":"OFF");autoButton.classList.toggle("is-on",autoFireEnabled);autoButton.setAttribute("aria-pressed",String(autoFireEnabled));}
  const arena=stage.querySelector(".arena");
  arena.innerHTML='<div class="arena-grid"></div>'+r.enemies.map(e=>`<div class="arena-enemy ${e.boss?"boss":e.elite?"elite":""}" style="left:${e.x*100}%;top:${e.y*100}%"><i style="width:${Math.max(0,e.hp/e.maxHp*100)}%"></i></div>`).join("")+r.projectiles.map(s=>`<div class="arena-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+r.enemyShots.map(s=>`<div class="arena-hostile-shot" style="left:${s.x*100}%;top:${s.y*100}%"></div>`).join("")+`<div class="arena-player ${r.invulnerable>0?"hit":""}" style="left:${r.player.x*100}%;top:${r.player.y*100}%"></div>`;
 }
@@ -286,6 +287,7 @@ function handle(action,id){
  case "level":openSimple("플레이어 레벨",`Lv.${save.player.level} · EXP ${save.player.exp}/${expRequired(save.player.level)}`);break;
  case "star":openSimple("차원의 별","별 시스템은 별도 콘텐츠 규칙을 정한 뒤 추가합니다.");break;
  case "audio":save.settings.bgmEnabled=!save.settings.bgmEnabled;persist();break;
+ case "toggle-auto-fire":autoFireEnabled=!autoFireEnabled;renderCombat();break;
  case "weapons-menu":openWeapons();break;
  case "leave-game":stopGameLoop();activeRun=null;app.querySelector(".gameplay-screen")?.remove();closePanel();updateLobby();break;
  case "next-wave":if(nextArenaWave(activeRun)){closePanel();startGameLoop();renderCombat();}break;
