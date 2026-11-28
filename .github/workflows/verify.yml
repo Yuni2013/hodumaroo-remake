@@ -18,8 +18,21 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
       - name: Install dependencies
         run: npm install
+      - name: Check JavaScript syntax
+        run: |
+          set -e
+          for file in public/js/*.js; do
+            node --check "$file"
+          done
       - name: Build
         run: npm run build
+      - name: Verify public game files were copied
+        run: |
+          test -f dist/css/style.css
+          test -f dist/js/01-storage.js
+          test -f dist/js/13-engine.js
+          test -f dist/js/22-mobile-controls.js
+          test -f dist/js/34-world3-shooter.js
