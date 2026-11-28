@@ -1737,3 +1737,20 @@ button:active{transform:scale(.95);}
   padding:2px 8px;border-radius:8px;
   border:1px solid #7c3aed;
 }
+
+
+/* Modes intentionally excluded from this remake branch. */
+#sAlienDimension,
+#sBackrooms,
+#defenseVitalsBar,
+#defenseSackBar,
+#defenseHotbar,
+#defenseInvBtn,
+#defenseBuildBtn,
+#defensePhaseIndicator,
+#defenseInteractHint,
+#defenseCraftModal,
+#defenseInvModal,
+#defenseChestModal {
+  display: none !important;
+}
