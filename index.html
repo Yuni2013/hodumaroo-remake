@@ -1,70 +1,1343 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#fdf6e3" />
-  <title>호두마루 - Zombie Survival</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>호두마루 - Zombie Survival</title>
+<link rel="stylesheet" href="/hodumaroo-remake/css/style.css">
 </head>
 <body>
-  <main id="app" class="lobby-screen">
-    <div class="lobby-center">
-      <div class="logo">호두마루</div>
-      <div class="logo-sub">ZOMBIE SURVIVAL</div>
 
-      <div class="res-row">
-        <div class="rb cb">🪙 <span id="coin-count">0</span></div>
-        <div class="rb eb">⚡ <span id="energy-count">0</span></div>
-      </div>
-
-      <div class="lobby-grid">
-        <button class="lb play" type="button" data-action="play">▶ 플레이</button>
-
-        <div class="pl-level-bar" data-action="level">
-          <div class="pl-lv-badge">Lv.<span id="player-level">1</span></div>
-          <div class="pl-bar-track">
-            <div class="pl-bar-fill" id="exp-fill"></div>
-            <div class="pl-bar-txt" id="exp-label">0 / 100</div>
-          </div>
-          <button class="pl-star-btn" type="button" data-action="star" aria-label="차원의 별">🌠</button>
-        </div>
-
-        <button class="lb shop" type="button" data-action="shop">🛒 상점</button>
-        <button class="lb skin" type="button" data-action="jobs">⚔️ 직업</button>
-        <button class="lb upg" type="button" data-action="upgrades">⬆ 영구업그레이드</button>
-        <button class="lb equip" type="button" data-action="equipment">🎒 장비</button>
-        <button class="lb ach" type="button" data-action="achievements">🏆 업적</button>
-        <button class="lb quest" type="button" data-action="quests">📅 퀘스트</button>
-        <button class="lb locked" type="button" data-action="pets">🔒 ???</button>
-        <button class="lb locked" type="button" data-action="relics">🔒 ???</button>
-      </div>
+<!-- 악마 디버프 전역 오버레이: 시야를 가리지 않는 비네트 + 코너 아이콘 -->
+<div id="merchDebuffOverlay" class="merch-debuff-overlay" style="display:none;"></div>
+<div id="merchDebuffBadge" class="merch-debuff-badge" style="display:none;">😈 저주 중</div>
+<!-- 세바스찬 해적단 복무 상태 배지 -->
+<div id="sebastianCrewBadge" class="sebastian-crew-badge" style="display:none;"></div>
+<!-- 상인 등장/구매 토스트 -->
+<div id="merchantToast" class="merchant-toast"></div>
+<!-- 상인 히든 연출용 풀스크린 컷신 -->
+<div id="merchCutsceneFx"></div>
+<!-- 스타쉽/에일리언 등장 시 1회 재생되는 비인터랙티브 착륙 컷신 (버튼을 막지 않음) -->
+<div id="shipLandingFx"></div>
+<div id="warpFlashFx"></div>
+<div id="alienPortalFx"></div>
+<!-- 상인 계약서(두루마리 인장 확인) 오버레이: MR 감자씨/악마/천사 전용 -->
+<div id="merchContractOv">
+  <div class="merch-contract-scroll">
+    <div class="mc-header" id="merchContractTitle"></div>
+    <div class="mc-body" id="merchContractBody"></div>
+    <div class="mc-seal" id="merchContractSeal"></div>
+    <button class="mc-sign-btn" id="merchContractSignBtn"></button>
+    <button class="mc-cancel-btn" onclick="closeMerchContract()">취소</button>
+  </div>
+</div>
+<!-- 특별 상인 팝업: 보상 없음, 순수하게 독특한 연출 + 영구 배치 구매 -->
+<div id="specialMerchOv">
+  <div class="special-merch-card">
+    <button class="smc-close" onclick="closeSpecialMerch()">✕</button>
+    <div class="smc-stage"><div class="smc-icon" id="smcIcon"></div><div class="smc-fx" id="smcFx"></div></div>
+    <div class="smc-title" id="smcTitle"></div>
+    <div class="smc-line" id="smcLine"></div>
+    <div class="smc-interact" id="smcInteractZone"></div>
+    <button class="smc-talk-btn" id="smcActionBtn"></button>
+    <button class="smc-place-btn" id="smcPlaceBtn" onclick="buySpecialResident()"></button>
+  </div>
+</div>
+<!-- 스타쉽 매입 팝업: 우주선을 사면 월드3로 갈 수 있다 -->
+<div id="starshipOv">
+  <div class="starship-panel">
+    <button class="smc-close" onclick="closeStarshipPopup()">✕</button>
+    <div class="ssp-visual">
+      <svg viewBox="0 0 300 110" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hullGradPop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e2e8f0"/><stop offset="45%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#334155"/>
+          </linearGradient>
+          <linearGradient id="hullGradPop2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#64748b"/>
+          </linearGradient>
+          <linearGradient id="flameGradPop" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0%" stop-color="#dbeafe"/><stop offset="35%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+          </linearGradient>
+          <radialGradient id="engineGlowPop" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#bae6fd"/><stop offset="55%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path class="ssp-idle-flame" d="M58 44 Q4 50 -4 50 Q4 50 58 60 Z" fill="url(#flameGradPop)"/>
+        <path d="M100 34 L64 4 L128 30 Z" fill="#94a3b8" stroke="#1e293b" stroke-width="1.6"/>
+        <path d="M100 66 L64 96 L128 70 Z" fill="#7c8ba1" stroke="#1e293b" stroke-width="1.6"/>
+        <path d="M58 36 Q42 50 58 64 L140 70 Q168 66 190 58 L246 52 Q270 50 246 44 L190 40 Q168 34 140 30 Z" fill="url(#hullGradPop)" stroke="#1e293b" stroke-width="2.2"/>
+        <path d="M64 40 Q52 50 64 60 L138 65 L138 35 Z" fill="#e2e8f0" opacity=".4"/>
+        <path d="M150 30 L158 12 L176 14 L172 32 Z" fill="url(#hullGradPop2)" stroke="#1e293b" stroke-width="1.6"/>
+        <rect x="160" y="16" width="10" height="6" rx="1.5" fill="#38bdf8" opacity=".85"/>
+        <path d="M96 38 L96 62 M118 34 L118 66 M140 32 L140 68 M164 34 L164 66 M186 36 L186 64 M210 40 L210 60" stroke="#475569" stroke-width="1" opacity=".55"/>
+        <path d="M200 42 L236 45 M200 58 L236 55" stroke="#94a3b8" stroke-width="1.2" opacity=".7"/>
+        <path d="M246 44 L272 47 L246 52 Z" fill="#475569" stroke="#1e293b" stroke-width="1.5"/>
+        <ellipse cx="60" cy="38" rx="7" ry="6" fill="url(#engineGlowPop)"/>
+        <ellipse cx="60" cy="50" rx="8" ry="7" fill="url(#engineGlowPop)"/>
+        <ellipse cx="60" cy="62" rx="7" ry="6" fill="url(#engineGlowPop)"/>
+        <circle class="ship-navlight" cx="66" cy="8" r="2.6" fill="#ef4444"/>
+        <circle class="ship-navlight nl2" cx="66" cy="94" r="2.6" fill="#4ade80"/>
+        <path d="M104 66 L96 88 M96 88 L86 91 M96 88 L106 93" stroke="#334155" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <path d="M188 60 L198 90 M198 90 L188 93 M198 90 L208 95" stroke="#334155" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <rect x="150" y="38" width="22" height="26" rx="3" fill="#fde68a"/>
+        <rect x="150" y="38" width="22" height="26" rx="3" fill="none" stroke="#78350f" stroke-width="1.5"/>
+      </svg>
     </div>
+    <div class="ssp-title">🚀 신비로운 우주선</div>
+    <div class="ssp-desc">우주 저편에서 날아온 진짜 우주선입니다. 이걸 손에 넣으면 아무도 가본 적 없는<br><b>월드3</b>로 떠날 수 있다는 소문이...</div>
+    <div class="ssp-note" id="starshipNote"></div>
+    <button class="ssp-buy-btn" id="starshipBuyBtn"></button>
+  </div>
+</div>
 
-    <aside class="side-tabs right-tabs" aria-label="추가 메뉴">
-      <button class="side-tab event-tab" type="button" data-action="events"><span>🎉</span><b>이벤트</b></button>
-      <button class="side-tab season-tab" type="button" data-action="season"><span>🌟</span><b>시즌패스</b></button>
-      <button class="side-tab enchant-tab" type="button" data-action="enchant"><span>🔮</span><b>인챈트</b></button>
-    </aside>
-    <aside class="side-tabs left-tabs" aria-label="인벤토리">
-      <button class="side-tab inventory-tab" type="button" data-action="inventory"><span>🎒</span><b>인벤토리</b></button>
-    </aside>
-
-    <button class="notice-float" type="button" data-action="notice">
-      <span class="notice-bell">🔔</span><span>공지사항</span><i>NEW</i>
+<!-- ══ LOBBY ══ -->
+<div id="sLobby" class="screen on">
+  <div class="logo">호두마루</div>
+  <div class="logo-sub">ZOMBIE SURVIVAL</div>
+  <div id="titleDisp" style="display:none;margin:2px auto 6px;padding:3px 12px;background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;font-size:11px;font-weight:800;border-radius:12px;width:fit-content;"></div>
+  <div class="res-row">
+    <div class="rb cb">🪙 <span id="lc">0</span></div>
+    <div class="rb eb">⚡ <span id="le">0</span></div>
+  </div>
+  <div class="lobby-grid">
+    <button id="btn-play" class="lb play" onclick="openMapSelect()">▶ 플레이</button>
+    <div id="plLevelBar" class="pl-level-bar" onclick="openStarDrop()">
+      <div class="pl-lv-badge">Lv.<span id="plLv">1</span></div>
+      <div class="pl-bar-track"><div class="pl-bar-fill" id="plBarFill" style="width:0%"></div><div class="pl-bar-txt" id="plBarTxt">0 / 100</div></div>
+      <div class="pl-star-btn" id="plStarBtn" title="차원의 별 뽑기">🌠<span class="pl-star-badge" id="plStarBadge" style="display:none;">0</span></div>
+    </div>
+    <button id="btn-shop" class="lb shop" onclick="go('sShop')">🛒 상점</button>
+    <button id="btn-skin" class="lb skin" onclick="go('sJob')">⚔️ 직업</button>
+    <button id="btn-upg" class="lb upg" onclick="go('sUpg')">⬆ 영구업그레이드</button>
+    <button id="btn-equip" class="lb equip" onclick="go('sEquip')">🎒 장비</button>
+    <button class="lb" style="background:linear-gradient(135deg,#1e1b4b,#4c1d95);color:#c4b5fd;" onclick="go('sAch')">🏆 업적</button>
+    <button class="lb" style="background:linear-gradient(135deg,#065f46,#047857);color:#d1fae5;border:1.5px solid #10b981;" onclick="go('sDailyQuest')">📅 퀘스트</button>
+    <button id="btn-pet" class="lb" style="background:linear-gradient(135deg,#334155,#1e293b);color:#94a3b8;border:1.5px solid #475569;" onclick="openPetScreen()">🔒 ???</button>
+    <button id="btn-relics" class="lb" style="background:linear-gradient(135deg,#334155,#1e293b);color:#94a3b8;border:1.5px solid #475569;" onclick="openRelicScreen()">🔒 ???</button>
+  </div>
+  <div class="side-tab-stack">
+    <button id="btn-event" class="side-tab-btn side-tab-event" onclick="go('sEvent')">
+      <span class="side-tab-glow"></span>
+      <span class="side-tab-ico">🎉</span>
+      <span class="side-tab-txt">이벤트</span>
     </button>
+    <button id="btn-season" class="side-tab-btn side-tab-season" onclick="openSeasonPass()">
+      <span class="side-tab-glow"></span>
+      <span class="side-tab-ico">🌟</span>
+      <span class="side-tab-txt" id="seasonTabTxt">시즌패스</span>
+    </button>
+    <button class="side-tab-btn side-tab-enchant" onclick="go('sEnchant')">
+      <span class="side-tab-glow"></span>
+      <span class="side-tab-ico">🔮</span>
+      <span class="side-tab-txt">인챈트</span>
+    </button>
+  </div>
+  <div class="side-tab-stack-left">
+    <button class="side-tab-btn side-tab-merchinv" onclick="go('sMerchantInv')">
+      <span class="side-tab-glow"></span>
+      <span class="side-tab-ico">🎒</span>
+      <span class="side-tab-txt">인벤토리</span>
+    </button>
+  </div>
+  <!-- 공지사항 버튼 -->
+  <button id="noticeBtn" class="notice-float-btn" onclick="openNoticeBoard()">
+    <span class="notice-btn-bell">🔔</span>
+    <span class="notice-btn-txt">공지사항</span>
+    <span class="notice-btn-badge" id="noticeBadge">NEW</span>
+  </button>
+  <!-- 떠돌이 상인 (로비 배회, 테마 없는 예비용 폴백) -->
+  <div id="merchantNpc" onclick="event.stopPropagation()" style="display:none;"></div>
+  <!-- 상인 테마 연출: 바닥 + 배회하는 탈것/영체 (내용은 JS가 상인별로 채움) -->
+  <div id="merchFloorFx"><div class="merch-wave w1"></div><div class="merch-wave w2"></div></div>
+  <div id="merchVehicleNpc" onclick="event.stopPropagation()"></div>
+  <!-- 공중 상인(천사/악마/별의 요정) 전용 로비 전체 배경 연출 -->
+  <div id="merchLobbyAmbientFx"></div>
+  <!-- 영구 배치된 특별 상인들이 로비 구석에서 배회 -->
+  <div id="specialResidentsZone"></div>
+  <!-- 매입한 스타쉽: 크게 정박해서 상시 엔진 글로우 + 클릭 시 월드3로 출발 -->
+  <div id="starshipDockEarth" class="starship-dock" onclick="event.stopPropagation()"></div>
+  <!-- 에일리언 함선이 떨구고 간 정체불명의 큐브: 클릭하면 차원으로 진입 -->
+  <div id="alienCubeEarth" class="alien-cube" onclick="event.stopPropagation()"></div>
+  <!-- 폭풍구역 헬기: 폭풍 작업복 착용 시 표시 -->
+  <div id="stormZoneHeliBtnWrap" style="display:none;position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:30;cursor:pointer;display:none;flex-direction:column;align-items:center;gap:6px;" onclick="onStormZoneHeliClick()">
+    <svg width="110" height="76" viewBox="0 0 70 48" xmlns="http://www.w3.org/2000/svg" class="sz-heli-svg">
+      <defs>
+        <radialGradient id="heliGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#a855f7" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="35" cy="28" rx="28" ry="14" fill="url(#heliGlow)"/>
+      <!-- 헬기 몸통 -->
+      <ellipse cx="35" cy="28" rx="18" ry="9" fill="#4c1d95" stroke="#7c3aed" stroke-width="1.5"/>
+      <!-- 앞부분 -->
+      <ellipse cx="48" cy="28" rx="7" ry="6" fill="#6d28d9"/>
+      <!-- 꼬리 -->
+      <line x1="17" y1="28" x2="5" y2="25" stroke="#4c1d95" stroke-width="3"/>
+      <ellipse cx="5" cy="24" rx="4" ry="2" fill="#6d28d9"/>
+      <!-- 메인 로터 -->
+      <line x1="10" y1="20" x2="60" y2="20" stroke="#a855f7" stroke-width="2.5" class="sz-heli-rotor"/>
+      <line x1="25" y1="14" x2="45" y2="26" stroke="#a855f7" stroke-width="2" class="sz-heli-rotor" style="transform-origin:35px 20px;transform:rotate(45deg)"/>
+      <!-- 랜딩기어 -->
+      <line x1="24" y1="37" x2="24" y2="44" stroke="#7c3aed" stroke-width="2"/>
+      <line x1="46" y1="37" x2="46" y2="44" stroke="#7c3aed" stroke-width="2"/>
+      <line x1="18" y1="44" x2="30" y2="44" stroke="#7c3aed" stroke-width="2"/>
+      <line x1="40" y1="44" x2="52" y2="44" stroke="#7c3aed" stroke-width="2"/>
+    </svg>
+    <div class="sz-heli-label" style="font-size:13px;font-weight:800;color:#a855f7;text-shadow:0 0 8px #7c3aed;white-space:nowrap;background:rgba(30,0,60,0.82);padding:4px 12px;border-radius:10px;border:1px solid #7c3aed;">⚡ 폭풍구역 진입</div>
+  </div>
+  <div id="kevinBegBadge" style="display:none;position:fixed;left:14px;bottom:80px;z-index:24;background:rgba(0,0,0,.55);color:#fde68a;font-size:11px;font-weight:700;padding:5px 10px;border-radius:14px;align-items:center;gap:4px;">🧓 케빈이 구걸 중...</div>
+  <div class="ver">호두마루 v1.0</div>
+  <div style="position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;z-index:25;background:rgba(255,255,255,0.85);padding:4px 14px;border-radius:20px;border:1px solid #e5e7eb;">
+    <span style="font-size:11px;color:#6b7280;">🎵 BGM</span>
+    <input type="range" id="bgmVol" min="0" max="1" step="0.05" value="0.18" style="width:80px;cursor:pointer;" oninput="setBGMVol(parseFloat(this.value))">
+    <button id="bgmToggleBtn" onclick="bgmPlaying?stopBGM():startBGM()" style="font-size:10px;padding:2px 8px;border:1px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer;">ON/OFF</button>
+  </div>
+  <button class="code-btn" onclick="openCode()">🔑 CODE</button>
+  <button class="code-btn" style="right:14px;left:auto;" onclick="openSettings()">⚙️ 설정</button>
+  <!-- 드림코어 진입 버튼 -->
+  <div id="dreamBtn" onclick="enterDreamworld();" style="position:fixed;top:10px;left:10px;width:48px;height:48px;cursor:pointer;z-index:9000;border-radius:6px;overflow:hidden;display:none;opacity:0.8;transition:all .3s;filter:grayscale(40%);" onmouseenter="dreamBtnHover(true)" onmouseleave="dreamBtnHover(false)">
+    <img src="" id="dreamBtnImg" style="width:100%;height:100%;object-fit:cover;display:block;">
+  </div>
+  <!-- 데일리 보상 상자 (24시간마다 1회) -->
+  <div id="dailyRewardBox" class="daily-box" onclick="openDailyRewardBox()" title="데일리 보상">
+    <div class="daily-box-glow"></div>
+    <div class="daily-box-ico" id="drBoxIcon">🎁</div>
+    <div class="daily-box-timer" id="drBoxTimer"></div>
+  </div>
+</div>
 
-    <div class="daily-box"><button type="button" data-action="daily-box" aria-label="일일 보상">🎁</button></div>
-    <div class="version-label">호두마루 RE:MAKE</div>
+<!-- ══ 월드3 전용 신규 로비: 우주 착륙장 ══ -->
+<div id="sLobby3" class="screen w3-lobby">
+  <div class="w3-starfield"></div>
+  <div class="logo">월드3</div>
+  <div class="logo-sub">UNKNOWN ORBIT</div>
+  <div class="w3-lobby-desc">아무도 가본 적 없는 궤도. 우주선이 이곳 바닥에 정박해 있다.</div>
+  <div id="starshipDockWorld3" class="starship-dock" onclick="event.stopPropagation()"></div>
+  <div class="w3-lobby-btns">
+    <button class="lb w3-btn" onclick="openWorld3MapSelect()">🗺 맵 선택</button>
+    <button class="lb w3-btn w3-btn-return" onclick="returnFromWorld3()">🌍 지구로 귀환</button>
+  </div>
+  <div class="ver">호두마루 v1.0</div>
+</div>
 
-    <div class="audio-control">
-      <span>🎵 BGM</span>
-      <input id="bgm-volume" type="range" min="0" max="1" step="0.05" value="0.18" aria-label="배경음악 음량" />
-      <button type="button" data-action="audio">ON/OFF</button>
+<!-- ══ 월드3 홀로그램 맵 선택 UI ══ -->
+<div id="sWorld3Hologram" class="screen holo-screen">
+  <div class="w3-starfield"></div>
+  <button class="back holo-back" onclick="go('sLobby3')">← 뒤로</button>
+  <div class="holo-title">MISSION SELECT</div>
+  <div id="world3HoloCards" class="holo-cards"></div>
+</div>
+
+<!-- ══ 에일리언 함선으로만 갈 수 있는 특별한 차원: 공포 연출 전용 ══ -->
+<div id="sAlienDimension" class="screen horror-dim">
+  <div class="horror-vignette"></div>
+  <div class="horror-eyes-field" id="horrorEyesField"></div>
+  <div class="horror-title" id="horrorTitle">???</div>
+  <div class="horror-sub">SOMETHING IS WATCHING</div>
+  <div class="horror-lines" id="horrorLine"></div>
+  <div class="horror-btn-row">
+    <button class="horror-btn horror-btn-escape" onclick="startHorrorCorridor()">ESCAPE</button>
+    <button class="horror-btn" onclick="exitAlienDimension()">🌀 차원의 틈에서 빠져나가기</button>
+  </div>
+</div>
+
+<!-- ══ 백룸 진짜 탈출구 컷신 ══ -->
+<!-- ══ 폭풍구역 엔딩 컷씬 ══ -->
+<div id="szEndingModal" class="sz-ending">
+  <canvas id="szEndingCanvas"></canvas>
+  <div id="szEndingFx"></div>
+  <div class="sz-ending-vignette" id="szEndingVign"></div>
+  <div class="sz-ending-lines" id="szEndingLines"></div>
+  <div class="sz-ending-title" id="szEndingTitle"></div>
+  <div class="sz-ending-sub" id="szEndingSub"></div>
+  <div class="sz-ending-stats" id="szEndingStats"></div>
+</div>
+<div id="brEscapeCutscene" class="br-cutscene">
+  <canvas id="brCsCanvas"></canvas>
+  <div id="brCsFx"></div>
+  <div class="br-cs-light" id="brCsLight"></div>
+  <div class="br-cs-flash" id="brCsFlash"></div>
+  <div id="brCsConfetti"></div>
+  <div class="br-cs-vignette" id="brCsVignette"></div>
+  <div class="br-cs-scanline" id="brCsScanline"></div>
+  <div class="br-cs-lines" id="brCsLines"></div>
+  <div class="br-cs-title" id="brCsTitle"></div>
+  <div class="br-cs-sub" id="brCsSub"></div>
+  <div class="br-cs-stats" id="brCsStats"></div>
+</div>
+
+<!-- ══ 노란 문을 통과해야만 갈 수 있는 새로운 차원: 백룸즈 ══ -->
+<div id="sBackrooms" class="screen backrooms-dim">
+  <div class="backrooms-flicker"></div>
+  <div class="backrooms-title">THE BACKROOMS</div>
+  <div class="backrooms-sub">아무도 없어야 할 곳에 아무도 없다</div>
+  <div class="backrooms-desc">누런 벽지와 젖은 카펫 냄새. 형광등이 웅웅거린다. 여긴 대체 몇 층일까.</div>
+  <div class="backrooms-best" id="brBestLevel">아직 도달한 층이 없다</div>
+  <div class="backrooms-btn-row">
+    <button class="lb backrooms-btn backrooms-btn-enter" onclick="startBackroomsRun()">🚪 미로로 들어가기</button>
+    <button class="lb backrooms-btn" onclick="go('sLobby')">🏠 로비로 돌아가기</button>
+  </div>
+  <button id="brEscapeReplayBtn" class="backrooms-replay-btn" style="display:none;" onclick="replayBackroomsEscapeCutscene()">🎬 탈출 컷신 다시보기</button>
+  <div id="brDevPanel" style="display:none;position:relative;z-index:1;flex-direction:column;gap:6px;margin-top:18px;padding:10px 14px;background:rgba(0,0,0,.45);border:1.5px dashed #a855f7;border-radius:12px;max-width:min(92vw,560px);">
+    <div style="font-size:11px;font-weight:800;color:#c4b5fd;letter-spacing:1px;">🛠️ DEV: 레벨 바로가기</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;">
+      <button class="br-dev-btn" onclick="devBrGoto('level0')">LEVEL 0</button>
+      <button class="br-dev-btn" onclick="devBrGoto('fun')">FUN=)</button>
+      <button class="br-dev-btn" onclick="devBrGoto('garage')">주차장</button>
+      <button class="br-dev-btn" onclick="devBrGoto('pool')">수영장</button>
+      <button class="br-dev-btn" onclick="devBrGoto('pool2')">수영장 상층</button>
+      <button class="br-dev-btn" onclick="devBrGoto('city')">도시</button>
+      <button class="br-dev-btn" onclick="devBrGoto('field')">갈대밭</button>
     </div>
-    <button class="corner-button code-button" type="button" data-action="code">🔑 CODE</button>
-    <button class="corner-button settings-button" type="button" data-action="settings">⚙️ 설정</button>
-    <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
-  </main>
-  <script type="module" src="./src/main.js"></script>
+    <div style="font-size:11px;font-weight:800;color:#c4b5fd;letter-spacing:1px;margin-top:4px;">🎬 DEV: 엔딩 재생</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;">
+      <button class="br-dev-btn" onclick="devBrEnding('level0')">LEVEL 0</button>
+      <button class="br-dev-btn" onclick="devBrEnding('fun')">FUN=)</button>
+      <button class="br-dev-btn" onclick="devBrEnding('garage')">주차장</button>
+      <button class="br-dev-btn" onclick="devBrEnding('pool')">수영장</button>
+      <button class="br-dev-btn" onclick="devBrEnding('field')">갈대밭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 데일리 보상 결과 연출 -->
+<div id="dailyRewardResult" class="sd-result"></div>
+
+
+<!-- ══ DREAMCORE WORLD ══ -->
+<div id="sDream" class="screen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;overflow:hidden;flex-direction:column;align-items:center;justify-content:center;">
+  <!-- 글리치 오버레이 -->
+  <canvas id="dreamCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+  <!-- 눈 배경들 -->
+  <img class="dream-eye" id="dEye1" src="" style="position:absolute;opacity:0;filter:grayscale(100%) brightness(0.4);">
+  <img class="dream-eye" id="dEye2" src="" style="position:absolute;opacity:0;filter:grayscale(100%) brightness(0.3);">
+  <img class="dream-eye" id="dEye3" src="" style="position:absolute;opacity:0;filter:grayscale(100%) brightness(0.35);">
+  <!-- UI -->
+  <div style="position:relative;z-index:10;text-align:center;">
+    <div id="dreamTitle" class="glitch-text" style="font-size:clamp(28px,6vw,56px);font-family:'Courier New',monospace;color:#fff;letter-spacing:8px;margin-bottom:4px;">WAKE UP</div>
+    <div id="dreamSub" class="glitch-text" style="font-size:12px;color:#aaa;letter-spacing:4px;margin-bottom:40px;font-family:'Courier New',monospace;">THE SUN IS RISING</div>
+    <div class="dream-menu">
+      <button class="dream-btn" onclick="dreamGo('sMap','dream')">▶ ENTER</button>
+      <button class="dream-btn" onclick="dreamShop()">⬛ ITEMS</button>
+      <button class="dream-btn" onclick="go('sEquip');renderEquip();">⬛ EQUIP</button>
+      <button class="dream-btn" onclick="dreamJob()">⬛ ENTITY</button>
+      <button class="dream-btn" onclick="exitDreamworld()">← ESCAPE</button>
+    </div>
+    <div class="dream-res">
+      <span style="color:#555;font-family:monospace;">🪙 <span id="dlc">0</span></span>
+      <span style="color:#333;font-family:monospace;margin-left:20px;">⚡ <span id="dle">0</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- 드림코어 맵 선택 -->
+<div id="sDreamMap" class="screen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;overflow:hidden;flex-direction:column;align-items:center;justify-content:center;">
+  <canvas id="dreamCanvas2" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+  <div style="position:relative;z-index:10;text-align:center;width:100%;">
+    <div class="glitch-text" style="font-size:18px;color:#555;letter-spacing:6px;margin-bottom:32px;font-family:'Courier New',monospace;">CHOOSE YOUR NIGHTMARE</div>
+    <div id="dreamMapList" style="display:flex;flex-direction:column;align-items:center;gap:10px;"></div>
+    <button class="dream-btn" style="margin-top:24px;font-size:11px;" onclick="go('sDream')">← RUN</button>
+  </div>
+</div>
+
+<!-- 드림코어 상점/직업 오버레이 글리치 -->
+<div id="dreamOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;padding-top:30px;">
+  <canvas id="dreamCanvas3" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+  <div style="position:relative;z-index:10;width:min(95vw,700px);">
+    <div id="dreamOverlayTitle" class="glitch-text" style="font-size:20px;color:#fff;letter-spacing:6px;font-family:'Courier New',monospace;margin-bottom:20px;text-align:center;"></div>
+    <div id="dreamOverlayContent" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;"></div>
+    <button class="dream-btn" style="margin-top:20px;width:100%;" onclick="closeDreamOverlay()">← BACK</button>
+  </div>
+</div>
+
+
+<!-- ══ 업적 화면 ══ -->
+<div id="sAch" class="screen" style="background:linear-gradient(160deg,#0a0014,#000);padding:12px;overflow-y:auto;align-items:stretch;justify-content:flex-start;">
+  <button class="back" onclick="go('sLobby')">← 뒤로</button>
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-size:22px;font-weight:900;color:#fbbf24;letter-spacing:4px;">🏆 업적</div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+      <button class="stab on" data-tab="ach" onclick="setAchTab('ach',this)">🏆 업적</button>
+      <button class="stab" data-tab="title" onclick="setAchTab('title',this)">👑 칭호</button>
+      <button class="stab" onclick="go('sRecords')">🎖️ 기록</button>
+    </div>
+    <div id="achProgress" style="font-size:11px;color:#6b7280;margin-top:4px;"></div>
+    <div id="titleProgress" style="font-size:11px;color:#6b7280;margin-top:4px;"></div>
+    <button id="devEggRevealBtn" style="display:none;margin-top:10px;padding:6px 14px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;" onclick="openDevEggPreview()">🛠️ 이스터에그 프리뷰 (DEV)</button>
+    <button id="devMerchSummonBtn" style="display:none;margin-top:8px;padding:6px 14px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#c2410c,#f97316);color:#fff;" onclick="openDevMerchantSummon()">🛠️ 상인 소환 (DEV)</button>
+    <button id="devBackroomsBtn" style="display:none;margin-top:8px;margin-right:6px;padding:6px 14px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;" onclick="devEnterBackrooms()">🛠️ 백룸 바로 입장 (DEV)</button>
+    <button id="devBrEndingBtn" style="display:none;margin-top:8px;padding:6px 14px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;" onclick="openDevBrEndingModal()">🎬 엔딩보기 (DEV)</button>
+    <button id="devStormEndingBtn" style="display:none;margin-top:8px;padding:6px 14px;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7f1d1d,#dc2626);color:#fff;" onclick="devStormEnding()">⚡ 폭풍구역 엔딩 확인 (DEV)</button>
+  </div>
+  <div id="achList" style="display:flex;flex-direction:column;gap:8px;max-width:700px;margin:0 auto;padding-bottom:40px;"></div>
+  <div id="titleList" style="display:none;flex-direction:column;gap:8px;max-width:700px;margin:0 auto;padding-bottom:40px;"></div>
+</div>
+
+<!-- ══ MAP SELECT ══ -->
+<div id="sMap" class="screen">
+  <div id="extremeGlow" class="extreme-glow"></div>
+  <button class="back" onclick="mapBack()">← 뒤로</button>
+  <div class="stitle">🗺 맵 선택</div>
+  <div class="stabs" style="margin-bottom:8px;">
+    <button id="world1Btn" class="stab wtab on" onclick="setWorld(1)">🌍 월드1</button>
+  </div>
+  <div class="stabs">
+    <button class="stab on" onclick="mapTab('wave',this)">🌊 웨이브맵</button>
+    <button class="stab" onclick="mapTab('boss',this)">👹 보스맵</button>
+    <button class="stab" onclick="mapTab('challenge',this)">🔥 챌린지맵</button>
+    <button class="stab" onclick="mapTab('tower',this)">🗼 무한의 탑</button>
+  </div>
+  <div id="mapMsg" style="font-size:12px;color:#ef4444;font-weight:700;height:16px;margin-bottom:4px;"></div>
+  <div class="map-row">
+    <button class="marr" onclick="chMap(-1)">‹</button>
+    <div class="mcard">
+      <canvas id="mpC" width="400" height="210"></canvas>
+      <div class="minfo">
+        <div class="mname" id="mn"></div>
+        <div class="mdesc" id="md"></div>
+        <div class="mtags" id="mt"></div>
+      </div>
+    </div>
+    <button class="marr" onclick="chMap(1)">›</button>
+    <button id="extremeBtn" class="extreme-btn" onclick="toggleExtremeMode()" title="스폰율+100% · 대미지+150% · 몹 양+100% (보스전 제외)">🔥<br>EXTREME</button>
+  </div>
+  <button class="mok" onclick="confirmMapSelect()">이 맵으로 →</button>
+  <button id="towerShopBtn" onclick="openTowerShop()" style="display:none;margin-top:8px;padding:8px 20px;background:linear-gradient(135deg,#4c1d95,#7c3aed);border:none;border-radius:10px;color:#fff;font-weight:800;font-size:13px;cursor:pointer;">🗼 탑의 상점 (정수: <span id="towerEssenceLbl">0</span>)</button>
+</div>
+
+<!-- ══ 무한의 탑: 정수 상점 ══ -->
+<div id="towerShopOv" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,0,20,.96);z-index:42;align-items:center;justify-content:center;">
+  <div style="width:min(500px,92vw);max-height:82vh;overflow-y:auto;background:#14102a;border:2px solid #7c3aed;border-radius:16px;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-size:18px;font-weight:900;color:#c4b5fd;">🗼 탑의 상점</div>
+      <button onclick="closeTowerShop()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div style="font-size:12px;color:#a78bfa;margin-bottom:12px;">보유 탑의 정수: <span id="towerShopEssence">0</span> ✨ (층 클리어마다 획득, 영구 강화는 다음 등반부터 적용)</div>
+    <div id="towerShopList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<!-- ══ 무한의 탑: 보물의 문 유물 선택 ══ -->
+<div id="towerRelicOv" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,0,20,.96);z-index:43;flex-direction:column;align-items:center;justify-content:center;">
+  <div class="ut">💰 보물의 문</div>
+  <div class="usub">유물을 하나 선택하세요 (이번 등반 동안 유지)</div>
+  <div class="ucards" id="towerRelicCards"></div>
+</div>
+
+<!-- ══ WEAPON SELECT ══ -->
+<div id="sWeapon" class="screen">
+  <button class="back" onclick="go('sMap')">← 뒤로</button>
+  <div class="stitle" style="margin-bottom:6px;">⚔️ 무기 선택</div>
+  <div style="font-size:11px;color:#9ca3af;margin-bottom:16px;">4번째 슬롯 = 장비탭 장착 무기</div>
+  <div class="wcards" id="wCards"></div>
+  <button class="wok" onclick="startGame()">게임 시작!</button>
+</div>
+
+<!-- ══ SHOP ══ -->
+<div id="sShop" class="screen">
+  <button class="back" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="margin-bottom:6px;">🛒 상점</div>
+  <div class="res-row" style="margin-bottom:10px;">
+    <div class="rb cb" style="font-size:12px;padding:4px 14px;">🪙 <span id="sc">0</span></div>
+    <div class="rb eb" style="font-size:12px;padding:4px 14px;">⚡ <span id="se">0</span></div>
+  </div>
+  <div class="stabs">
+    <button class="stab on" onclick="stab('items',this)">아이템</button>
+    <button class="stab" onclick="stab('armor',this)">갑옷</button>
+    <button class="stab" onclick="stab('weapons',this)">무기</button>
+    <button class="stab" onclick="stab('gameitem',this)">✨ 아이템</button>
+  </div>
+  <div class="sgrid" id="sGrid"></div>
+</div>
+
+<!-- ══ PERM UPGRADE ══ -->
+<div id="sUpg" class="screen">
+  <button class="back" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="margin-bottom:4px;">⬆ 영구업그레이드</div>
+  <div class="rb eb" style="font-size:12px;padding:4px 14px;margin-bottom:10px;">⚡ <span id="ue">0</span></div>
+  <div class="ugrid" id="uGrid"></div>
+</div>
+
+<!-- ══ EQUIP ══ -->
+<div id="sEquip" class="screen">
+  <button class="back" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="margin-bottom:4px;">🎒 장비</div>
+  <div style="display:flex;gap:6px;margin-bottom:8px;justify-content:center;">
+    <button id="eTabWep"  class="etab on" onclick="setEquipTab('wep')">⚔️ 무기</button>
+    <button id="eTabArmor" class="etab"   onclick="setEquipTab('armor')">🛡️ 갑옷</button>
+    <button id="eTabItem"  class="etab"   onclick="setEquipTab('item')">✨ 아이템</button>
+    <button id="eTabStar"  class="etab"   onclick="setEquipTab('star')">🌠 별</button>
+  </div>
+  <div class="ebody">
+    <div class="elist" id="eList"></div>
+    <div class="eprev">
+      <canvas id="ppC" width="120" height="160"></canvas>
+      <div style="font-size:10px;color:#6d28d9;margin-top:6px;text-align:center;" id="pLabel">장비 없음</div>
+    </div>
+  </div>
+  <div class="edet" id="eDet" style="display:none;">
+    <div class="ednm" id="edNm"></div>
+    <div class="edds" id="edDs"></div>
+    <div class="edbts">
+      <button class="edbtn w" id="edW">장착</button>
+      <button class="edbtn u" id="edU">⚡ 강화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ JOB ══ -->
+<div id="sJob" class="screen" style="background:linear-gradient(160deg,#f8f4ff,#fff0fb);">
+  <button class="back" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="margin-bottom:6px;">⚔️ 직업 선택</div>
+  <div class="res-row" style="margin-bottom:10px;">
+    <div class="rb cb" style="font-size:12px;padding:4px 14px;">🪙 <span id="jc">0</span></div>
+    <div class="rb eb" style="font-size:12px;padding:4px 14px;">⚡ <span id="je">0</span></div>
+  </div>
+  <div style="display:flex;gap:14px;width:min(720px,95vw);max-height:70vh;">
+    <div id="jobList" style="flex:2;overflow-y:auto;display:flex;flex-direction:column;gap:8px;max-height:70vh;padding-right:4px;"></div>
+    <div id="jobPreview" style="flex:1;background:#f0e8ff;border-radius:14px;border:2px solid #c4b5fd;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:18px 14px;min-width:190px;max-height:70vh;overflow-y:auto;">
+      <div style="font-size:52px;margin-bottom:8px;" id="jpIcon">⚔️</div>
+      <div style="font-size:15px;font-weight:800;color:#4c1d95;margin-bottom:4px;text-align:center;" id="jpName">직업 미선택</div>
+      <div style="font-size:11px;color:#6b7280;text-align:center;line-height:1.6;margin-bottom:10px;white-space:pre-line;" id="jpDesc">직업을 클릭하면
+여기에 설명이 표시됩니다</div>
+      <div id="jpSkills" style="width:100%;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<canvas id="gameCanvas"></canvas>
+
+<div id="gameUI">
+  <div class="hbar">
+    <div>
+      <div class="hsts">
+        <div class="hs" id="hw">🌊 1</div>
+        <div class="hs" id="hhp" style="color:#4ade80;">❤️ 100</div>
+        <div class="hs" id="hsc">⭐ 0</div>
+        <div class="hs" id="ham">탄약</div>
+        <div class="hs" id="hkl">💀 0</div>
+        <div class="hs" id="hco" style="color:#fbbf24;">🪙 0</div>
+        <div class="hs" id="hen" style="color:#a855f7;">⚡ 0</div>
+        <div class="hs" id="hDay" style="display:none;color:#fde68a;">📅 1일차</div>
+        <div class="hs" id="hTime" style="display:none;color:#93c5fd;">⏳ 01:30</div>
+        <div class="hs" id="hBaseHp" style="display:none;color:#fb923c;">🏕 200/200</div>
+      </div>
+      <div id="hmsg"></div>
+      
+  <div id="itemBar" style="position:fixed;bottom:60px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:50;pointer-events:auto;"></div>
+
+  <!-- ── 백룸 모바일 이동 컨트롤러 (기존 D패드 – 폴백용으로 유지, 평소엔 숨김) ── -->
+  <div id="brMobileControls" style="display:none;"></div>
+  <!-- 백룸 우측 드래그 카메라 회전 안내 -->
+  <div id="brCamHint" style="position:fixed;right:12px;bottom:22px;display:none;z-index:51;pointer-events:none;text-align:center;color:rgba(255,255,255,.55);font-size:11px;line-height:1.4;">
+    <div style="font-size:22px;">👆</div>우측 드래그<br>카메라 회전
+  </div>
+
+  <div id="bossBar">
+        <div class="bbg">
+          <div class="btop"><div class="bname" id="bNm">👹 보스</div><div class="bhp" id="bHp">0/0</div></div>
+          <div class="btrack"><div class="bfill" id="bFill" style="width:100%;background:linear-gradient(90deg,#ef4444,#fbbf24);"></div></div>
+          <div class="bphase" id="bPhase"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mmbox"><canvas id="mmC" width="72" height="108"></canvas></div>
+  </div>
+</div>
+<div id="perks"></div>
+
+
+<!-- ══ PARTY ══ -->
+<div id="sParty" class="screen">
+  <button class="back" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="color:#1e40af;margin-bottom:12px;">🤝 파티 시스템</div>
+
+  <div class="party-box">
+    <h3>📋 파티 만들기</h3>
+    <div class="party-code-disp" id="myPartyCode">------</div>
+    <button class="party-btn create" onclick="createParty()">+ 새 파티 생성</button>
+    <div id="partyMemberList" style="margin-top:8px;"></div>
+    <button class="party-btn" style="background:#ef4444;color:#fff;display:none;" id="startPartyBtn" onclick="startPartyGame()">▶ 파티 게임 시작</button>
+  </div>
+
+  <div class="party-box">
+    <h3>🔗 파티 참가</h3>
+    <input class="party-input" id="joinCodeInput" placeholder="코드 입력 (6자리)" maxlength="6">
+    <button class="party-btn join" onclick="joinParty()">참가하기</button>
+    <div id="joinStatus" style="font-size:11px;color:#6b7280;text-align:center;min-height:16px;"></div>
+  </div>
+
+  <div style="font-size:10px;color:#6b7280;text-align:center;max-width:440px;line-height:1.6;">
+    💡 같은 기기에서 파티 코드를 공유하면 함께 시작할 수 있어요.<br>
+    파티원은 코인·에너지 보상을 1.5배 받습니다!
+  </div>
+</div>
+
+<!-- ══ SEASON PASS ══ -->
+<div id="sSeason" class="screen">
+  <button class="back" style="border-color:#4c1d95;color:#a855f7;" onclick="go('sLobby')">← 뒤로</button>
+  <div class="sp-header">
+    <div class="sp-season-num" id="spSeasonNum">시즌 1</div>
+    <div class="sp-title">✨ 시즌패스</div>
+    <div class="sp-sub">웨이브를 클리어해서 XP를 획득하고 보상을 받으세요!</div>
+    <div id="spMonthType" style="font-size:11px;padding:3px 12px;border-radius:12px;margin-top:4px;display:inline-block;"></div>
+    <div id="spTimer" style="font-size:12px;color:#ef4444;font-weight:700;margin-top:6px;background:rgba(239,68,68,0.1);padding:4px 14px;border-radius:20px;display:inline-block;">⏰ --:--:--</div>
+  </div>
+  <div class="sp-progress-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <div style="font-size:13px;font-weight:800;color:#fbbf24;">Lv.<span id="spLv">1</span></div>
+      <div style="font-size:11px;color:#c4b5fd;"><span id="spXP">0</span> / <span id="spNextXP">1000</span> XP</div>
+    </div>
+    <div class="sp-bar-bg"><div class="sp-bar-fill" id="spBar" style="width:0%"></div></div>
+    <div class="sp-xp-txt">총 XP: <span id="spTotalXP">0</span></div>
+  </div>
+  <div class="sp-track" id="spTrack"></div>
+  <div style="font-size:10px;color:#6b7280;margin-top:10px;text-align:center;">
+    💡 웨이브 클리어 시 XP 획득 · 보스 처치 시 XP 2배
+  </div>
+</div>
+
+<!-- ══ 인챈트 홀 ══ -->
+<div id="sEnchant" class="screen" style="background:radial-gradient(circle at 50% 20%,#2e1065,#0f0320 70%);">
+  <button class="back" style="border-color:#7c3aed;color:#e9d5ff;background:rgba(76,29,149,.5);" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="color:#e9d5ff;text-shadow:0 0 12px #a855f7;">🔮 인챈트</div>
+  <div class="stabs">
+    <button class="stab on" style="background:#2e1065;color:#c4b5fd;" onclick="setEnchantCat('wep',this)">⚔️ 무기</button>
+    <button class="stab" style="background:#2e1065;color:#c4b5fd;" onclick="setEnchantCat('armor',this)">🛡️ 갑옷</button>
+    <button class="stab" style="background:#2e1065;color:#c4b5fd;" onclick="setEnchantCat('job',this)">💼 직업</button>
+  </div>
+  <div style="display:flex;gap:14px;width:min(720px,94vw);max-height:60vh;">
+    <div id="enchantList" style="flex:1.1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+    <div id="enchantDetail" style="flex:1;background:rgba(76,29,149,.25);border:1px solid #7c3aed;border-radius:12px;padding:16px;"></div>
+  </div>
+  <div style="margin-top:14px;width:min(720px,94vw);max-height:26vh;overflow-y:auto;background:rgba(0,0,0,.3);border-radius:10px;padding:10px;">
+    <div style="font-size:11px;color:#c4b5fd;font-weight:700;margin-bottom:6px;">📊 확률표</div>
+    <div id="enchantProbTable" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:10px;color:#e9d5ff;"></div>
+  </div>
+</div>
+
+<!-- ══ 인챈트 룰렛 ══ -->
+<div id="enchantRouletteOv" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,0,20,.92);z-index:400;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
+  <div style="font-size:14px;color:#c4b5fd;letter-spacing:4px;">✨ INCHANTING ✨</div>
+  <div id="enchantSpinName" style="font-size:32px;font-weight:900;color:#fbbf24;text-shadow:0 0 20px #a855f7;min-height:44px;"></div>
+</div>
+<!-- ══ 인챈트 컷씬 (SOL'S RNG 스타일) ══ -->
+<div id="enchantCutscene" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:500;overflow:hidden;">
+  <canvas id="cutsceneCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+  <div id="cutsceneFlash" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#fff;opacity:0;pointer-events:none;"></div>
+  <div id="cutsceneShakeWrap" style="position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+    <div id="cutsceneRarityLabel" style="font-size:13px;letter-spacing:8px;color:#fff;opacity:.85;font-weight:700;"></div>
+    <div id="cutsceneTierName" style="font-size:20px;font-weight:900;transform:scale(0);transition:transform .5s cubic-bezier(.34,1.8,.64,1);background:linear-gradient(135deg,#fbbf24,#a855f7,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px #a855f7;text-align:center;"></div>
+    <div id="cutsceneSub" style="font-size:11px;color:#c4b5fd;letter-spacing:3px;opacity:0;transition:opacity .6s;"></div>
+  </div>
+  <button id="cutsceneSkipBtn" onclick="skipEnchantCutscene()" style="position:absolute;bottom:24px;right:24px;z-index:3;padding:8px 18px;background:rgba(0,0,0,.6);border:1.5px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px);">건너뛰기 ⏭</button>
+</div>
+
+<!-- ══ 물약 상점 ══ -->
+<div id="sPotionShop" class="screen" style="background:radial-gradient(circle at 50% 15%,#3b0764,#0a0212 75%);">
+  <button class="back" style="border-color:#7c3aed;color:#e9d5ff;background:rgba(76,29,149,.5);" onclick="go('sEnchant')">← 뒤로</button>
+  <div class="stitle" style="color:#e9d5ff;text-shadow:0 0 12px #a855f7;">🧪 물약 상점</div>
+  <div id="potionLuckDisp" style="font-size:12px;color:#fbbf24;font-weight:700;margin-bottom:8px;"></div>
+  <div class="sgrid" id="potionGrid" style="max-height:68vh;"></div>
+</div>
+
+<!-- ══ 퀘스트 ══ -->
+<div id="sDailyQuest" class="screen" style="background:linear-gradient(160deg,#ecfdf5,#f0fdfa);">
+  <button class="back" style="border-color:#059669;color:#047857;" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="color:#047857;">📅 퀘스트</div>
+  <div class="stabs">
+    <button class="stab on" data-tab="daily" style="background:#d1fae5;color:#047857;" onclick="setQuestTab('daily',this)">📅 일일</button>
+    <button class="stab" data-tab="weekly" style="background:#d1fae5;color:#047857;" onclick="setQuestTab('weekly',this)">📆 주간</button>
+    <button class="stab" data-tab="mega" style="background:#d1fae5;color:#047857;" onclick="setQuestTab('mega',this)">🌟 메가</button>
+  </div>
+  <div id="dailyQuestReset" style="font-size:12px;color:#ef4444;font-weight:700;margin-bottom:12px;background:rgba(239,68,68,0.1);padding:4px 14px;border-radius:20px;"></div>
+  <div id="dailyQuestList" style="display:flex;flex-direction:column;gap:10px;width:min(480px,92vw);max-height:60vh;overflow-y:auto;"></div>
+  <div id="dailyQuestHint" style="font-size:10px;color:#059669;margin-top:14px;text-align:center;">💡 매일 자정에 새로운 퀘스트 3개로 초기화됩니다</div>
+</div>
+
+<!-- ══ 펫 시스템 ══ -->
+<div id="sPets" class="screen" style="background:linear-gradient(160deg,#fdf2f8,#fce7f3);">
+  <button class="back" style="border-color:#be185d;color:#831843;" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="color:#831843;">🐾 펫</div>
+  <div class="stabs">
+    <button class="stab on" style="background:#fce7f3;color:#831843;" onclick="setPetTab('collection',this)">📖 도감</button>
+    <button class="stab" style="background:#fce7f3;color:#831843;" onclick="setPetTab('eggs',this)">🥚 알 부화</button>
+  </div>
+  <div id="petEquipDisp" style="font-size:12px;color:#be185d;font-weight:700;margin-bottom:4px;"></div>
+  <div class="sgrid" id="petGrid" style="max-height:62vh;"></div>
+</div>
+<div id="petHatchResult" class="sd-result"></div>
+
+<!-- ══ 상인 인벤토리 ══ -->
+<div id="sMerchantInv" class="screen" style="background:linear-gradient(160deg,#fff7ed,#fef3c7);">
+  <button class="back" style="border-color:#c2410c;color:#7c2d12;" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="color:#7c2d12;">🎒 인벤토리</div>
+  <div class="stabs">
+    <button class="stab on" data-tab="fruit" style="background:#fed7aa;color:#7c2d12;" onclick="setMerchInvTab('fruit',this)">🍎 과일</button>
+    <button class="stab" data-tab="potion" style="background:#fed7aa;color:#7c2d12;" onclick="setMerchInvTab('potion',this)">🧪 물약</button>
+    <button class="stab" data-tab="junk" style="background:#fed7aa;color:#7c2d12;" onclick="setMerchInvTab('junk',this)">🗑️ 잡동사니</button>
+    <button class="stab" data-tab="snack" style="background:#fed7aa;color:#7c2d12;" onclick="setMerchInvTab('snack',this)">🥯 분식</button>
+  </div>
+  <div class="sgrid" id="merchInvGrid" style="max-height:62vh;"></div>
+</div>
+
+<!-- ══ 상인 상점 오버레이 (공용) ══ -->
+<div id="merchantShopOv" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:44;align-items:center;justify-content:center;">
+  <div id="merchantShopPanel" class="merchant-shop-panel">
+    <div class="merchant-shop-head">
+      <div id="merchantShopTitle" class="merchant-shop-title"></div>
+      <button onclick="closeMerchantShop()" class="merchant-shop-close">✕</button>
+    </div>
+    <div class="merchant-shop-coin">보유 코인: <span id="merchShopCoinDisp"></span></div>
+    <div id="merchantShopContent" class="merchant-shop-content"></div>
+  </div>
+</div>
+
+<!-- ══ 이벤트 화면 ══ -->
+<div id="sEvent" class="screen" style="background:#1a0a2e;overflow-y:auto;align-items:stretch;justify-content:flex-start;padding-bottom:20px;position:relative;transition:background 0.6s;">
+  <canvas id="eventAmbientCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+  <div style="position:relative;z-index:1;">
+  <button class="back" style="border-color:#f0abfc;color:#f0abfc;" onclick="go('sLobby')">← 뒤로</button>
+  <div class="stitle" style="color:#f0abfc;">🎉 이벤트</div>
+  <div class="stabs" style="justify-content:center;">
+    <button class="stab on" data-tab="game" style="background:#1a0a2e;color:#f0abfc;" onclick="setEventTab('game',this)">🎮 이벤트</button>
+    <button class="stab" data-tab="shop" style="background:#1a0a2e;color:#f0abfc;" onclick="setEventTab('shop',this)">🛍 상점</button>
+  </div>
+  <div id="eventDevBar" style="display:none;justify-content:center;align-items:center;gap:10px;margin:10px 0;">
+    <button class="bybtn" onclick="devCycleEvent(-1)">◀</button>
+    <span id="eventDevLabel" style="font-size:11px;color:#fbbf24;font-weight:800;"></span>
+    <button class="bybtn" onclick="devCycleEvent(1)">▶</button>
+  </div>
+  <div id="eventGameTab">
+    <div id="eventBanner" style="text-align:center;margin-bottom:6px;"></div>
+    <div id="eventGamePoints" style="text-align:center;font-size:15px;font-weight:900;color:#fbbf24;margin-bottom:12px;"></div>
+    <div id="eventGameArea" style="padding-bottom:10px;"></div>
+    <div style="text-align:center;font-size:12px;color:#e5e7eb;font-weight:800;margin:14px 0 4px;">🏆 이벤트 전용 보상</div>
+    <div id="eventRewardPanel" class="sgrid" style="max-width:640px;margin:0 auto 10px;"></div>
+    <div id="eventPeriodShopWrap">
+      <div style="text-align:center;font-size:12px;color:#e5e7eb;font-weight:800;margin:14px 0 4px;">🏪 이벤트 전용 교환소</div>
+      <div id="eventPeriodShop" class="sgrid" style="max-width:640px;margin:0 auto;"></div>
+    </div>
+  </div>
+  <div id="eventShopTab" style="display:none;">
+    <div style="font-size:12px;color:#e9d5ff;margin-bottom:2px;text-align:center;">좀비 처치 +1, 웨이브 클리어 +10, 보스 처치 +100 이벤트 포인트 획득</div>
+    <div style="font-size:16px;font-weight:900;color:#fbbf24;margin:6px 0 10px;text-align:center;">🎫 <span id="eventPoints">0</span> 포인트</div>
+    <div class="sgrid" id="eventShopList" style="max-height:56vh;margin:0 auto;"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ══ 유물 화면 ══ -->
+<div id="sRelics" class="screen" style="background:radial-gradient(circle at 50% 15%,#3b0764,#0a0212 75%);padding:12px;overflow-y:auto;align-items:stretch;justify-content:flex-start;">
+  <button class="back" style="border-color:#d8b4fe;color:#e9d5ff;" onclick="go('sLobby')">← 뒤로</button>
+  <div style="text-align:center;margin-bottom:12px;margin-top:6px;">
+    <div style="font-size:22px;font-weight:900;color:#e9d5ff;letter-spacing:2px;text-shadow:0 0 12px #a855f7;">🏺 유물</div>
+    <div style="font-size:11px;color:#c4b5fd;margin-top:4px;">유물을 모으고 장착하면 전투 중 특수 효과가 발동합니다</div>
+    <div style="font-size:12px;color:#fef3c7;margin-top:8px;">보유 코인: <span id="relicCoinDisp" style="font-weight:800;color:#fbbf24;">0</span></div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:10px;margin-bottom:6px;">
+    <div id="relicSlots" style="display:flex;gap:8px;"></div>
+  </div>
+  <div id="relicResult" style="text-align:center;font-size:12px;font-weight:800;min-height:16px;margin-bottom:10px;opacity:0;transition:opacity .3s;"></div>
+  <div style="text-align:center;font-size:12px;font-weight:800;color:#d8b4fe;margin:4px 0 8px;">🎁 유물함 뽑기 (확률형 · 저렴)</div>
+  <div id="relicBoxList" class="sgrid" style="max-width:700px;margin:0 auto 18px;background:transparent;flex-shrink:0;"></div>
+  <div style="text-align:center;font-size:12px;font-weight:800;color:#d8b4fe;margin:4px 0 8px;">🛒 유물 상점 (원하는 유물 직접 구매)</div>
+  <div id="relicList" style="display:flex;flex-direction:column;gap:8px;max-width:700px;margin:0 auto;padding-bottom:40px;"></div>
+</div>
+
+<!-- ══ 차원의 별(스타드롭) 뽑기 화면 ══ -->
+<div id="sStarDrop" class="screen sd-screen">
+  <button class="back" style="border-color:#818cf8;color:#e0e7ff;" onclick="closeStarDrop()">← 뒤로</button>
+  <div id="sdStage" class="sd-stage">
+    <div id="sdStarWrap" class="sd-star-wrap">
+      <div id="sdCrackGlow" class="sd-crack-glow"></div>
+      <div id="sdRays" class="sd-rays"></div>
+      <div id="sdChaosRing" class="sd-chaos-ring"></div>
+      <div class="sd-ring sd-ring1"></div>
+      <div class="sd-ring sd-ring2"></div>
+      <div class="sd-ring sd-ring3"></div>
+      <div id="sdStar" class="sd-star" onclick="clickStarDrop()">
+        <span class="sd-star-ico">🌟</span>
+        <span id="sdStarTierLabel" class="sd-star-tier-label"></span>
+      </div>
+      <div id="sdSparkLayer" class="sd-spark-layer"></div>
+    </div>
+    <div id="sdClicksBox" class="sd-clicks">남은 클릭 기회: 4</div>
+    <div id="sdInfo" class="sd-info">별을 클릭해 차원의 별을 깨워보세요!</div>
+    <button id="sdBulkBtn" class="sd-bulk-btn" onclick="bulkOpenStarDrop(10)" style="display:none;">⚡ 10개씩 까기</button>
+  </div>
+  <div id="sdResult" class="sd-result"></div>
+</div>
+
+<!-- ══ 명예의 전당 화면 ══ -->
+<div id="sRecords" class="screen" style="background:linear-gradient(160deg,#0a0014,#000);padding:12px;overflow-y:auto;align-items:stretch;justify-content:flex-start;">
+  <button class="back" onclick="go('sLobby')">← 뒤로</button>
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-size:22px;font-weight:900;color:#fbbf24;letter-spacing:2px;">🎖️ 명예의 전당</div>
+    <div style="font-size:11px;color:#a5b4fc;margin-top:4px;">지금까지의 생존 기록</div>
+  </div>
+  <div id="recordsList"></div>
+</div>
+
+<!-- ══ 보스 클리어 화면 ══ -->
+<div id="clearScreen" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);z-index:80;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
+  <div id="clearTitle" style="font-size:clamp(28px,5vw,52px);font-weight:900;color:#fbbf24;text-align:center;text-shadow:0 0 30px #f59e0b;"></div>
+  <div id="clearSub" style="font-size:clamp(14px,2.5vw,22px);color:#e5e7eb;text-align:center;"></div>
+  <div id="clearReward" style="display:flex;gap:16px;margin:8px 0;"></div>
+  <button onclick="clearToLobby()" style="padding:16px 56px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:14px;color:#fff;font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 4px 20px #a855f740;margin-top:10px;">🏠 로비로 돌아가기</button>
+</div>
+<!-- ══ 일시정지 메뉴 ══ -->
+<div id="pauseMenu" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:60;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <div style="font-size:28px;font-weight:900;color:#fbbf24;margin-bottom:8px;">⏸ 일시정지</div>
+  <button onclick="resumeGame()" style="padding:14px 48px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:12px;color:#fff;font-size:18px;font-weight:800;cursor:pointer;width:220px;">▶ 게임 계속하기</button>
+  <button onclick="quitGame()" style="padding:14px 48px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;border-radius:12px;color:#fff;font-size:18px;font-weight:800;cursor:pointer;width:220px;">🚪 게임 나가기</button>
+</div>
+
+<!-- ══ 스킬 버튼 (게임 중 우하단) ══ -->
+<div id="skillBar" style="display:none;position:fixed;bottom:14px;right:14px;z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+  <button id="skillBtnQ" onclick="useSkill('Q')" style="display:none;position:relative;width:60px;height:60px;border-radius:12px;border:2px solid #6b7280;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow:hidden;backdrop-filter:blur(4px);"></button>
+  <button id="skillBtnE" onclick="useSkill('E')" style="display:none;position:relative;width:60px;height:60px;border-radius:12px;border:2px solid #6b7280;background:rgba(0,0,0,.7);color:#fff;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow:hidden;backdrop-filter:blur(4px);"></button>
+</div>
+
+<!-- ══ 일시정지 버튼 ══ -->
+<button id="pauseBtn" class="hudTopBtn" onclick="togglePause()" style="display:none;">⏸ 일시정지</button>
+<button id="waveSpeedBtn" class="hudTopBtn" onclick="toggleWaveSpeed()" style="display:none;">⏩ 2배</button>
+<button id="fireModeBtn" class="hudTopBtn" onclick="cycleFireMode()" style="display:none;">🖱️ 수동</button>
+<div id="semiFireIndicator" class="hudTopBtn" style="display:none;pointer-events:none;"></div>
+
+<!-- ══ 모바일 터치 컨트롤 (이동 조이스틱 + 발사/재장전 버튼) ══ -->
+<div id="mobileControls" style="display:none;">
+  <div id="joystickBase" style="position:fixed;left:22px;bottom:22px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35);z-index:7;touch-action:none;backdrop-filter:blur(2px);">
+    <div id="joystickKnob" style="position:absolute;left:50%;top:50%;width:52px;height:52px;margin-left:-26px;margin-top:-26px;border-radius:50%;background:rgba(255,255,255,.55);border:2px solid rgba(255,255,255,.8);"></div>
+  </div>
+  <button id="mobileReloadBtn" onclick="mobileReload()" style="position:fixed;right:96px;bottom:118px;width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.6);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:18px;z-index:7;touch-action:none;">🔄</button>
+  <button id="mobileFireBtn" style="position:fixed;right:90px;bottom:20px;width:88px;height:88px;border-radius:50%;background:rgba(239,68,68,.5);border:3px solid rgba(255,255,255,.65);color:#fff;font-size:30px;z-index:7;touch-action:none;">🔫</button>
+</div>
+
+<!-- ══ 디펜스 모드 전용 UI (위험한 캠핑) ══ -->
+<div id="defenseVitalsBar" style="display:none;position:fixed;left:14px;bottom:14px;z-index:8;width:240px;pointer-events:none;">
+  <div style="font-size:11px;color:#fca5a5;margin-bottom:2px;text-shadow:0 1px 2px #000;">❤️ 체력</div>
+  <div style="width:100%;height:16px;background:#000;border:2px solid #111;border-radius:6px;overflow:hidden;margin-bottom:6px;">
+    <div id="defenseHpFill" style="height:100%;width:100%;background:linear-gradient(90deg,#ef4444,#f87171);transition:width .2s;"></div>
+  </div>
+  <div style="font-size:11px;color:#fcd34d;margin-bottom:2px;text-shadow:0 1px 2px #000;">🍖 배고픔</div>
+  <div style="width:100%;height:16px;background:#000;border:2px solid #111;border-radius:6px;overflow:hidden;margin-bottom:6px;">
+    <div id="defenseHungerFill" style="height:100%;width:100%;background:linear-gradient(90deg,#b45309,#f59e0b);transition:width .2s;"></div>
+  </div>
+  <div style="font-size:11px;color:#86efac;margin-bottom:2px;text-shadow:0 1px 2px #000;">🏃 스태미나</div>
+  <div style="width:100%;height:16px;background:#000;border:2px solid #111;border-radius:6px;overflow:hidden;margin-bottom:6px;">
+    <div id="defenseStaminaFill" style="height:100%;width:100%;background:linear-gradient(90deg,#16a34a,#4ade80);transition:width .2s;"></div>
+  </div>
+  <div id="defenseColdBarWrap" style="display:none;">
+    <div style="font-size:11px;color:#93c5fd;margin-bottom:2px;text-shadow:0 1px 2px #000;">🥶 추위</div>
+    <div style="width:100%;height:16px;background:#000;border:2px solid #111;border-radius:6px;overflow:hidden;">
+      <div id="defenseColdFill" style="height:100%;width:0%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);transition:width .2s;"></div>
+    </div>
+  </div>
+</div>
+<div id="defenseSackBar" style="display:none;position:fixed;left:14px;bottom:150px;z-index:8;display:flex;gap:6px;flex-wrap:wrap;max-width:280px;pointer-events:none;"></div>
+
+<div id="defenseHotbar" style="display:none;position:fixed;right:14px;bottom:14px;z-index:8;flex-direction:row-reverse;gap:6px;"></div>
+<button id="defenseInvBtn" onclick="openDefenseInventory()" style="display:none;position:fixed;right:14px;bottom:146px;z-index:8;background:rgba(0,0,0,.6);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:20px;width:48px;height:48px;border-radius:10px;cursor:pointer;">🎒</button>
+<button id="defenseBuildBtn" onclick="openDefenseCraft('build')" style="display:none;position:fixed;right:14px;bottom:202px;z-index:8;background:rgba(0,0,0,.6);border:2px solid rgba(255,255,255,.4);color:#fff;font-size:20px;width:48px;height:48px;border-radius:10px;cursor:pointer;">🔨</button>
+
+<div id="defensePhaseIndicator" style="display:none;position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:8;font-size:14px;font-weight:800;padding:4px 14px;border-radius:20px;pointer-events:none;"></div>
+<button id="defenseInteractHint" style="display:none;position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:8;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12px;padding:6px 14px;border-radius:10px;pointer-events:none;"></button>
+
+<div id="defenseCraftModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:90;align-items:center;justify-content:center;">
+  <div style="width:min(560px,92vw);max-height:82vh;overflow-y:auto;background:#14100a;border:2px solid #a3853a;border-radius:16px;padding:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:18px;font-weight:900;color:#fde68a;" id="defenseCraftTitle">🔨 건설</div>
+      <button onclick="closeDefenseCraft()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div class="stabs" style="margin-bottom:10px;flex-wrap:wrap;">
+      <button class="stab on" id="dcTabBuild" onclick="switchDefenseCraftTab('build')">🏗 건설</button>
+      <button class="stab" id="dcTabCraft" onclick="switchDefenseCraftTab('craft')">🪓 도구</button>
+      <button class="stab" id="dcTabWeapon" onclick="switchDefenseCraftTab('weapon')">⚔️ 무기</button>
+      <button class="stab" id="dcTabArmor" onclick="switchDefenseCraftTab('armor')">🛡 방어구</button>
+    </div>
+    <div id="defenseCraftList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<div id="defenseInvModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:92;align-items:center;justify-content:center;">
+  <div style="width:min(480px,92vw);max-height:82vh;overflow-y:auto;background:#14100a;border:2px solid #a3853a;border-radius:16px;padding:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:18px;font-weight:900;color:#fde68a;">🎒 인벤토리 / 장비</div>
+      <button onclick="closeDefenseInventory()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div id="defenseInvList" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<div id="defenseChestModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:95;align-items:center;justify-content:center;">
+  <div style="width:min(360px,88vw);background:#14100a;border:2px solid #a3853a;border-radius:16px;padding:24px;text-align:center;">
+    <div id="defenseChestTier" style="font-size:22px;font-weight:900;margin-bottom:10px;"></div>
+    <div id="defenseChestReward" style="font-size:13px;color:#e5e7eb;margin-bottom:16px;line-height:1.8;"></div>
+    <button onclick="closeDefenseChest()" style="padding:10px 32px;background:linear-gradient(135deg,#a3853a,#78350f);border:none;border-radius:10px;color:#fff;font-weight:800;cursor:pointer;">확인</button>
+  </div>
+</div>
+
+<!-- ══ UPGRADE OVERLAY ══ -->
+<div id="upgOv">
+  <div class="ut">✨ 웨이브 클리어!</div>
+  <div class="uw" id="uvw"></div>
+  <div class="ures">
+    <div class="urb cb">🪙 +<span id="ucn">0</span></div>
+    <div class="urb eb">⚡ +<span id="uen">0</span></div>
+  </div>
+  <div class="usub">특성을 하나 선택하세요</div>
+  <div class="ucards" id="uCards"></div>
+</div>
+
+<!-- ══ 무한의 탑: 갈림길(문) 선택 오버레이 ══ -->
+<div id="towerDoorOv" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,0,20,.96);flex-direction:column;align-items:center;justify-content:center;z-index:41;">
+  <div class="ut">🗼 갈림길</div>
+  <div class="uw" id="towerDoorFloor"></div>
+  <div class="usub">다음 층으로 가는 문을 하나 고르세요</div>
+  <div class="ucards">
+    <div class="ucard" onclick="chooseTowerDoor('combat')">
+      <div class="uc-ico">⚔️</div><div class="uc-nm">전투의 문</div>
+      <div class="uc-ds">코인 보너스 + 특성 선택 기회<br>(가장 표준적인 성장 경로)</div>
+    </div>
+    <div class="ucard" onclick="chooseTowerDoor('treasure')">
+      <div class="uc-ico">💰</div><div class="uc-nm">보물의 문</div>
+      <div class="uc-ds">특성 선택 없이 코인·에너지 대량 획득<br>(안전하게 자원만)</div>
+    </div>
+    <div class="ucard" onclick="chooseTowerDoor('rest')">
+      <div class="uc-ico">💤</div><div class="uc-nm">휴식의 문</div>
+      <div class="uc-ds">체력을 완전히 회복<br>(위험한 층 앞두고 안정)</div>
+    </div>
+  </div>
+</div>
+
+<script src="/hodumaroo-remake/js/01-storage.js"></script>
+<script src="/hodumaroo-remake/js/02-jobs.js"></script>
+<script src="/hodumaroo-remake/js/03-pause-job-skills.js"></script>
+<script src="/hodumaroo-remake/js/04-layers-items.js"></script>
+<script src="/hodumaroo-remake/js/05-achievements.js"></script>
+<script src="/hodumaroo-remake/js/06-maps.js"></script>
+<script src="/hodumaroo-remake/js/07-weapons.js"></script>
+<script src="/hodumaroo-remake/js/08-armor-shop.js"></script>
+<script src="/hodumaroo-remake/js/09-perm-upgrade-equip.js"></script>
+<script src="/hodumaroo-remake/js/10-traits.js"></script>
+<script src="/hodumaroo-remake/js/11-boss-data-terrain.js"></script>
+<script src="/hodumaroo-remake/js/12-boss-fights.js"></script>
+<script src="/hodumaroo-remake/js/13-engine.js"></script>
+<script src="/hodumaroo-remake/js/14-bgm-party-season.js"></script>
+<script src="/hodumaroo-remake/js/15-dreamcore.js"></script>
+<script src="/hodumaroo-remake/js/16-item-use-equip.js"></script>
+<script src="/hodumaroo-remake/js/17-enchant.js"></script>
+<script src="/hodumaroo-remake/js/18-daily-quest.js"></script>
+<script src="/hodumaroo-remake/js/19-pets.js"></script>
+<script src="/hodumaroo-remake/js/20-storm-zone.js"></script>
+<script src="/hodumaroo-remake/js/21-events-game.js"></script>
+<script src="/hodumaroo-remake/js/22-mobile-controls.js"></script>
+<script src="/hodumaroo-remake/js/25-tower-mode.js"></script>
+<script src="/hodumaroo-remake/js/26-tower-content.js"></script>
+<script src="/hodumaroo-remake/js/27-records.js"></script>
+<script src="/hodumaroo-remake/js/28-eastereggs.js"></script>
+<script src="/hodumaroo-remake/js/29-relics.js"></script>
+<script src="/hodumaroo-remake/js/30-stardrop.js"></script>
+<script src="/hodumaroo-remake/js/31-daily-reward.js"></script>
+<script src="/hodumaroo-remake/js/32-merchants.js"></script>
+<script src="/hodumaroo-remake/js/34-world3-shooter.js"></script>
+<!-- ══ 설정 모달 ══ -->
+<div id="settingsModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;">
+  <div class="code-box" style="max-width:340px;">
+    <h3 style="color:#6d28d9;">⚙️ 설정</h3>
+    <p style="margin-bottom:12px;">게임 옵션을 설정하세요</p>
+    <div id="orientSettingRow" style="display:none;gap:8px;margin-bottom:16px;">
+      <button id="orientPortraitBtn" class="orient-btn" onclick="setScreenMode('portrait')">📱 세로 모드</button>
+      <button id="orientLandscapeBtn" class="orient-btn" onclick="setScreenMode('landscape')">📱 가로 모드</button>
+    </div>
+    <div id="controlSettingRow" style="display:none;flex-direction:column;gap:6px;margin-bottom:16px;">
+      <div style="display:flex;gap:8px;">
+        <button id="controlNormalBtn" class="orient-btn" onclick="setControlMode('normal')">🕹️ 일반 조작</button>
+        <button id="controlSimpleBtn" class="orient-btn" onclick="setControlMode('simple')">👆 간단 조작</button>
+      </div>
+      <p style="font-size:10px;color:#9ca3af;text-align:left;margin:0;">간단 조작: 화면 아무 곳이나 터치해서 이동, 발사는 자동으로 고정됩니다</p>
+    </div>
+    <button onclick="confirmReset()" style="width:100%;padding:10px 0;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">🗑️ 데이터 초기화</button>
+    <button onclick="closeSettings()" class="code-cancel">닫기</button>
+  </div>
+</div>
+<!-- ══ 초기화 확인 모달 ══ -->
+<div id="resetConfirmModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:110;align-items:center;justify-content:center;">
+  <div class="code-box" style="max-width:360px;border-color:#ef4444;">
+    <h3 style="color:#dc2626;">⚠️ 초기화 방식을 선택하세요</h3>
+    <p style="color:#6b7280;margin-bottom:16px;font-size:12px;">아래 두 가지 중 하나를 골라주세요</p>
+    <button onclick="doResetKeepEnchant()" style="width:100%;padding:10px 0;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">🗑️ 돈·에너지·업그레이드 초기화<br><span style="font-size:10px;font-weight:500;opacity:.9;">(인챈트는 유지됩니다)</span></button>
+    <button onclick="doResetFull()" style="width:100%;padding:10px 0;background:linear-gradient(135deg,#ef4444,#7f1d1d);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;">💀 인챈트 포함 완전 초기화<br><span style="font-size:10px;font-weight:500;opacity:.9;">(모든 데이터 삭제)</span></button>
+    <button onclick="cancelReset()" style="width:100%;padding:10px 0;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">✅ 취소 (돌아가기)</button>
+  </div>
+</div>
+<!-- ══ 공지사항 모달 ══ -->
+<div id="noticeBoardModal" onclick="if(event.target===this)closeNoticeBoard()">
+  <div class="notice-modal-inner">
+    <div class="notice-modal-header">
+      <div class="notice-modal-title">🔔 공지사항</div>
+      <button class="notice-close-btn" onclick="closeNoticeBoard()">✕</button>
+    </div>
+    <div class="notice-body">
+
+      <!-- 최신 업데이트 -->
+      <div class="notice-section">
+        <div class="notice-thumb">
+          <svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <linearGradient id="ng1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a0533"/><stop offset="50%" stop-color="#3b0764"/><stop offset="100%" stop-color="#4c0519"/></linearGradient>
+              <radialGradient id="ng1g" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#a855f7" stop-opacity=".25"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+              <filter id="ng1blur"><feGaussianBlur stdDeviation="3"/></filter>
+            </defs>
+            <rect width="680" height="130" fill="url(#ng1)"/>
+            <!-- 번개 구름 배경 -->
+            <ellipse cx="100" cy="40" rx="70" ry="28" fill="#2d1b69" opacity=".8"/>
+            <ellipse cx="160" cy="32" rx="55" ry="22" fill="#3730a3" opacity=".7"/>
+            <ellipse cx="520" cy="38" rx="80" ry="30" fill="#1e1b4b" opacity=".9"/>
+            <ellipse cx="590" cy="28" rx="60" ry="24" fill="#312e81" opacity=".7"/>
+            <!-- 번개 -->
+            <polyline points="130,55 118,78 128,78 112,105" stroke="#fbbf24" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <polyline points="130,55 118,78 128,78 112,105" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" opacity=".7"/>
+            <polyline points="555,52 540,76 553,76 534,108" stroke="#c084fc" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <polyline points="555,52 540,76 553,76 534,108" stroke="#fff" stroke-width=".8" fill="none" stroke-linecap="round" opacity=".6"/>
+            <!-- 폭풍구역 텍스트 -->
+            <text x="340" y="52" text-anchor="middle" font-size="28" font-weight="900" fill="#fbbf24" opacity=".95" font-family="sans-serif">⚡ WORLD 2</text>
+            <text x="340" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#e879f9" font-family="sans-serif">폭풍구역 엔딩 시네마틱</text>
+            <text x="340" y="104" text-anchor="middle" font-size="11" fill="#c4b5fd" font-family="sans-serif">NEW  ·  특효 무기 3종  ·  월드2 진입 조건 변경</text>
+            <!-- NEW 배지 -->
+            <rect x="8" y="8" width="46" height="20" rx="10" fill="#dc2626"/>
+            <text x="31" y="21" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" font-family="sans-serif">NEW</text>
+            <!-- 무기 아이콘들 -->
+            <text x="30" y="100" font-size="22" font-family="sans-serif">⚔️</text>
+            <text x="58" y="100" font-size="22" font-family="sans-serif">🔫</text>
+            <text x="86" y="100" font-size="22" font-family="sans-serif">💣</text>
+            <text x="620" y="98" font-size="26" font-family="sans-serif">🌪️</text>
+          </svg>
+        </div>
+        <div class="notice-section-body">
+          <span class="notice-version-tag current">▶ 최신 업데이트 · 2025년 7월</span>
+          <div class="notice-update-title">🌪️ 월드2 &amp; 폭풍구역 엔딩 업데이트</div>
+          <div class="notice-item-list">
+            <div class="notice-item"><div class="notice-item-dot red"></div><span><b>월드2 진입 조건 변경</b> — 폭풍 작업복 착용 필수</span></div>
+            <div class="notice-item"><div class="notice-item-dot red"></div><span><b>특효 무기 3종 추가</b> — 월드2 전용 고위력 무기 (독성 AK 등)</span></div>
+            <div class="notice-item"><div class="notice-item-dot yellow"></div><span><b>폭풍구역 엔딩 시네마틱 완성</b> — 풀 퀄리티 3D 연출</span></div>
+            <div class="notice-item"><div class="notice-item-dot purple"></div><span>폭풍구역 동굴 미로 개선 &amp; 모바일 지원, 신규 몹·업적</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>Transcendent 등급(虛空裂界) 강렬한 빨간색 이펙트 추가</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 백룸 업데이트 -->
+      <div class="notice-section">
+        <div class="notice-thumb">
+          <svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <linearGradient id="ng2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2d2000"/><stop offset="50%" stop-color="#3d2b00"/><stop offset="100%" stop-color="#1a1500"/></linearGradient>
+            </defs>
+            <rect width="680" height="130" fill="url(#ng2)"/>
+            <!-- 백룸 벽지 패턴 (누런 격자) -->
+            <g opacity=".35">
+              <rect x="0" y="0" width="680" height="130" fill="none" stroke="#a16207" stroke-width=".5"/>
+              <line x1="0" y1="20" x2="680" y2="20" stroke="#92400e" stroke-width=".4"/>
+              <line x1="0" y1="40" x2="680" y2="40" stroke="#92400e" stroke-width=".4"/>
+              <line x1="0" y1="60" x2="680" y2="60" stroke="#92400e" stroke-width=".4"/>
+              <line x1="0" y1="80" x2="680" y2="80" stroke="#92400e" stroke-width=".4"/>
+              <line x1="0" y1="100" x2="680" y2="100" stroke="#92400e" stroke-width=".4"/>
+              <line x1="0" y1="120" x2="680" y2="120" stroke="#92400e" stroke-width=".4"/>
+              <line x1="60" y1="0" x2="60" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="120" y1="0" x2="120" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="180" y1="0" x2="180" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="240" y1="0" x2="240" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="300" y1="0" x2="300" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="360" y1="0" x2="360" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="420" y1="0" x2="420" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="480" y1="0" x2="480" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="540" y1="0" x2="540" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="600" y1="0" x2="600" y2="130" stroke="#92400e" stroke-width=".4"/>
+              <line x1="640" y1="0" x2="640" y2="130" stroke="#92400e" stroke-width=".4"/>
+            </g>
+            <!-- 원근감 복도 -->
+            <polygon points="340,15 450,115 230,115" fill="none" stroke="#d97706" stroke-width="1.2" opacity=".5"/>
+            <polygon points="340,25 430,105 250,105" fill="none" stroke="#d97706" stroke-width=".7" opacity=".35"/>
+            <!-- 형광등 -->
+            <rect x="310" y="12" width="60" height="7" rx="3" fill="#fef3c7" opacity=".85"/>
+            <rect x="310" y="12" width="60" height="7" rx="3" fill="#fef3c7" opacity=".3" filter="url(#ng1blur)"/>
+            <line x1="340" y1="19" x2="340" y2="115" stroke="#fef3c7" stroke-width=".4" opacity=".2"/>
+            <!-- 텍스트 -->
+            <text x="340" y="54" text-anchor="middle" font-size="25" font-weight="900" fill="#fbbf24" font-family="monospace">THE BACKROOMS</text>
+            <text x="340" y="76" text-anchor="middle" font-size="13" fill="#fde68a" font-family="monospace">LEVEL FUN · 주차장 · 수영장 · 도시 · 갈대밭</text>
+            <text x="340" y="100" text-anchor="middle" font-size="11" fill="#a3a300" font-family="monospace">엔딩 5종 · 레이캐스팅 1인칭 탐험</text>
+            <text x="20" y="94" font-size="24" font-family="sans-serif">🚪</text>
+            <text x="630" y="94" font-size="22" font-family="monospace" fill="#fbbf24">???</text>
+          </svg>
+        </div>
+        <div class="notice-section-body">
+          <span class="notice-version-tag past">이전 업데이트</span>
+          <div class="notice-update-title">🚪 더 백룸스 대업데이트</div>
+          <div class="notice-item-list">
+            <div class="notice-item"><div class="notice-item-dot purple"></div><span><b>더 백룸스 추가</b> — 무한 레이캐스팅 1인칭 탐험, 5개 구역</span></div>
+            <div class="notice-item"><div class="notice-item-dot purple"></div><span><b>엔딩 5종</b> — 레벨별 완전히 다른 3D 시네마틱 연출</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>백룸 엔티티 이미지 시스템 (로드 실패 시 절차적 그리기)</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>모바일 터치 이동 컨트롤 추가</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 상인 업데이트 -->
+      <div class="notice-section">
+        <div class="notice-thumb">
+          <svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <linearGradient id="ng3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#052e16"/><stop offset="50%" stop-color="#064e3b"/><stop offset="100%" stop-color="#0c4a6e"/></linearGradient>
+            </defs>
+            <rect width="680" height="130" fill="url(#ng3)"/>
+            <!-- 별 배경 -->
+            <circle cx="50" cy="20" r="1.2" fill="#6ee7b7" opacity=".7"/>
+            <circle cx="150" cy="35" r="1" fill="#a7f3d0" opacity=".6"/>
+            <circle cx="280" cy="15" r="1.5" fill="#6ee7b7" opacity=".5"/>
+            <circle cx="430" cy="25" r="1" fill="#a7f3d0" opacity=".7"/>
+            <circle cx="600" cy="18" r="1.2" fill="#6ee7b7" opacity=".6"/>
+            <circle cx="650" cy="40" r="1" fill="#a7f3d0" opacity=".5"/>
+            <!-- 상인 천막 -->
+            <polygon points="200,115 200,55 340,35 480,55 480,115" fill="#065f46" stroke="#10b981" stroke-width="1.5" opacity=".9"/>
+            <polygon points="200,55 340,35 480,55 340,60" fill="#047857" opacity=".8"/>
+            <!-- 천막 줄무늬 -->
+            <line x1="240" y1="55" x2="240" y2="115" stroke="#10b981" stroke-width=".8" opacity=".4"/>
+            <line x1="280" y1="47" x2="280" y2="115" stroke="#10b981" stroke-width=".8" opacity=".4"/>
+            <line x1="340" y1="35" x2="340" y2="115" stroke="#10b981" stroke-width="1" opacity=".5"/>
+            <line x1="400" y1="47" x2="400" y2="115" stroke="#10b981" stroke-width=".8" opacity=".4"/>
+            <line x1="440" y1="55" x2="440" y2="115" stroke="#10b981" stroke-width=".8" opacity=".4"/>
+            <!-- 상인 아이콘들 -->
+            <text x="295" y="92" font-size="28" font-family="sans-serif">🧙</text>
+            <text x="355" y="92" font-size="26" font-family="sans-serif">🎒</text>
+            <!-- 텍스트 -->
+            <text x="340" y="26" text-anchor="middle" font-size="20" font-weight="900" fill="#6ee7b7" font-family="sans-serif">떠돌이 상인 시스템</text>
+            <text x="90" y="75" text-anchor="middle" font-size="13" fill="#34d399" font-family="sans-serif">상인 7종</text>
+            <text x="590" y="75" text-anchor="middle" font-size="13" fill="#34d399" font-family="sans-serif">인벤토리</text>
+            <text x="340" y="118" text-anchor="middle" font-size="11" fill="#a7f3d0" font-family="sans-serif">일일 · 주간 · 메가 퀘스트</text>
+            <!-- 코인 -->
+            <text x="30" y="50" font-size="20" font-family="sans-serif">🪙</text>
+            <text x="620" y="50" font-size="20" font-family="sans-serif">📦</text>
+          </svg>
+        </div>
+        <div class="notice-section-body">
+          <span class="notice-version-tag past">이전 업데이트</span>
+          <div class="notice-update-title">🧙 떠돌이 상인 &amp; 퀘스트 시스템 업데이트</div>
+          <div class="notice-item-list">
+            <div class="notice-item"><div class="notice-item-dot green"></div><span><b>떠돌이 상인 7종</b> — 상인별 고유 테마 연출, 세바스찬 나포 이벤트</span></div>
+            <div class="notice-item"><div class="notice-item-dot green"></div><span><b>인벤토리 시스템</b> — 구매 아이템 보관, 인벤토리 탭 추가</span></div>
+            <div class="notice-item"><div class="notice-item-dot green"></div><span><b>퀘스트 3종 탭</b> — 일일 / 주간 / 메가 퀘스트</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>데일리 보상 상자 — 24시간마다 코인/에너지 지급</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 이스터에그/유물 업데이트 -->
+      <div class="notice-section">
+        <div class="notice-thumb">
+          <svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <linearGradient id="ng4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1c1917"/><stop offset="40%" stop-color="#2e1a00"/><stop offset="100%" stop-color="#1a0a2e"/></linearGradient>
+              <radialGradient id="eggGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fbbf24" stop-opacity=".4"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+            </defs>
+            <rect width="680" height="130" fill="url(#ng4)"/>
+            <ellipse cx="340" cy="65" rx="160" ry="55" fill="url(#eggGlow)"/>
+            <!-- 별들 -->
+            <text x="15" y="30" font-size="12" font-family="sans-serif" opacity=".6">✨</text>
+            <text x="640" y="30" font-size="12" font-family="sans-serif" opacity=".6">✨</text>
+            <text x="30" y="105" font-size="10" font-family="sans-serif" opacity=".5">⭐</text>
+            <text x="620" y="105" font-size="10" font-family="sans-serif" opacity=".5">⭐</text>
+            <!-- 알 3개 -->
+            <ellipse cx="240" cy="75" rx="28" ry="35" fill="#78350f" stroke="#fbbf24" stroke-width="1.5"/>
+            <ellipse cx="240" cy="62" rx="12" ry="8" fill="#fbbf24" opacity=".3"/>
+            <ellipse cx="340" cy="70" rx="32" ry="40" fill="#4c1d95" stroke="#c084fc" stroke-width="2"/>
+            <ellipse cx="340" cy="56" rx="13" ry="9" fill="#c084fc" opacity=".4"/>
+            <text x="332" y="77" font-size="18" font-family="sans-serif">❓</text>
+            <ellipse cx="440" cy="75" rx="28" ry="35" fill="#134e4a" stroke="#2dd4bf" stroke-width="1.5"/>
+            <ellipse cx="440" cy="62" rx="12" ry="8" fill="#2dd4bf" opacity=".3"/>
+            <!-- 균열 효과 -->
+            <line x1="240" y1="58" x2="245" y2="70" stroke="#fbbf24" stroke-width="1.5" opacity=".7"/>
+            <line x1="437" y1="60" x2="443" y2="72" stroke="#2dd4bf" stroke-width="1.5" opacity=".7"/>
+            <!-- 텍스트 -->
+            <text x="340" y="20" text-anchor="middle" font-size="20" font-weight="900" fill="#fbbf24" font-family="sans-serif">이스터에그 39종 &amp; 유물 시스템</text>
+            <text x="340" y="122" text-anchor="middle" font-size="11" fill="#d97706" font-family="sans-serif">전용 직업 39종 · 히든 업적 37종 보상</text>
+            <!-- 유물 아이콘 -->
+            <text x="570" y="82" font-size="28" font-family="sans-serif">🏺</text>
+            <text x="80" y="82" font-size="26" font-family="sans-serif">🥚</text>
+          </svg>
+        </div>
+        <div class="notice-section-body">
+          <span class="notice-version-tag past">이전 업데이트</span>
+          <div class="notice-update-title">🥚 이스터에그 &amp; 유물 시스템 업데이트</div>
+          <div class="notice-item-list">
+            <div class="notice-item"><div class="notice-item-dot yellow"></div><span><b>이스터에그 39종</b> — 슬픈/무서운 10종 포함, 스토리 연출</span></div>
+            <div class="notice-item"><div class="notice-item-dot yellow"></div><span><b>이스터에그 전용 직업 39종</b></span></div>
+            <div class="notice-item"><div class="notice-item-dot yellow"></div><span><b>유물(Relics) 시스템</b> — 전투 중 발동 효과, 유물함 뽑기</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>히든 업적 37종 아이템/무기/갑옷 보상, 무기칸 레어도 이펙트</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 펫/인챈트 업데이트 -->
+      <div class="notice-section">
+        <div class="notice-thumb">
+          <svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <linearGradient id="ng5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0f0728"/><stop offset="50%" stop-color="#1e0a4e"/><stop offset="100%" stop-color="#0a1628"/></linearGradient>
+              <radialGradient id="enchantGlow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="#a855f7" stop-opacity=".5"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+            </defs>
+            <rect width="680" height="130" fill="url(#ng5)"/>
+            <ellipse cx="340" cy="55" rx="200" ry="70" fill="url(#enchantGlow)"/>
+            <!-- 인챈트 빛 기둥 -->
+            <rect x="320" y="0" width="40" height="130" fill="white" opacity=".04"/>
+            <rect x="330" y="0" width="20" height="130" fill="white" opacity=".06"/>
+            <!-- 별 파티클 -->
+            <circle cx="200" cy="30" r="2" fill="#e879f9" opacity=".8"/>
+            <circle cx="260" cy="55" r="1.5" fill="#c084fc" opacity=".7"/>
+            <circle cx="180" cy="80" r="2.5" fill="#f0abfc" opacity=".6"/>
+            <circle cx="480" cy="28" r="2" fill="#e879f9" opacity=".8"/>
+            <circle cx="510" cy="60" r="1.5" fill="#c084fc" opacity=".7"/>
+            <circle cx="500" cy="90" r="2" fill="#f0abfc" opacity=".6"/>
+            <circle cx="100" cy="50" r="1.5" fill="#a78bfa" opacity=".6"/>
+            <circle cx="580" cy="45" r="1.5" fill="#a78bfa" opacity=".6"/>
+            <!-- 인챈트 원형 -->
+            <circle cx="340" cy="62" r="42" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="6,4" opacity=".7"/>
+            <circle cx="340" cy="62" r="30" fill="none" stroke="#c084fc" stroke-width="1" stroke-dasharray="3,6" opacity=".5"/>
+            <!-- 중앙 아이콘 -->
+            <text x="318" y="77" font-size="36" font-family="sans-serif">🔮</text>
+            <!-- 텍스트 -->
+            <text x="340" y="16" text-anchor="middle" font-size="19" font-weight="900" fill="#e879f9" font-family="sans-serif">펫 · 인챈트 · 플레이어 레벨</text>
+            <text x="130" y="110" text-anchor="middle" font-size="13" fill="#c084fc" font-family="sans-serif">🐣 알 39종</text>
+            <text x="340" y="120" text-anchor="middle" font-size="11" fill="#a78bfa" font-family="sans-serif">등급 140종+ · SOL'S RNG 스타일 시네마틱</text>
+            <text x="560" y="110" text-anchor="middle" font-size="13" fill="#c084fc" font-family="sans-serif">🌠 차원의 별</text>
+          </svg>
+        </div>
+        <div class="notice-section-body">
+          <span class="notice-version-tag past">이전 업데이트</span>
+          <div class="notice-update-title">🐣 펫 &amp; 인챈트 &amp; 플레이어 레벨 업데이트</div>
+          <div class="notice-item-list">
+            <div class="notice-item"><div class="notice-item-dot purple"></div><span><b>펫(반려동물) 시스템</b> — 드림코어 해금, 알 39종, 극악 확률 등급</span></div>
+            <div class="notice-item"><div class="notice-item-dot purple"></div><span><b>인챈트 시스템</b> — 등급 140종+, SOL'S RNG 스타일 시네마틱</span></div>
+            <div class="notice-item"><div class="notice-item-dot purple"></div><span><b>플레이어 레벨 &amp; 차원의 별 뽑기</b> 시스템</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>시즌패스 (유료 잠금 시스템) · 월드2 기본 구성 추가</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 맵 확장 업데이트 -->
+      <div class="notice-section">
+        <div class="notice-thumb">
+          <svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <linearGradient id="ng6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0c1a0c"/><stop offset="50%" stop-color="#1a2e1a"/><stop offset="100%" stop-color="#0a1a2e"/></linearGradient>
+              <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#0f2d1a"/></linearGradient>
+            </defs>
+            <rect width="680" height="130" fill="url(#ng6)"/>
+            <!-- 별 -->
+            <circle cx="80" cy="15" r="1.2" fill="#fff" opacity=".7"/>
+            <circle cx="200" cy="25" r="1" fill="#fff" opacity=".5"/>
+            <circle cx="350" cy="10" r="1.5" fill="#fbbf24" opacity=".8"/>
+            <circle cx="500" cy="20" r="1" fill="#fff" opacity=".6"/>
+            <circle cx="620" cy="12" r="1.2" fill="#fff" opacity=".7"/>
+            <!-- 탑 실루엣 -->
+            <rect x="270" y="25" width="30" height="90" fill="#14532d" stroke="#22c55e" stroke-width="1"/>
+            <polygon points="270,25 285,5 300,25" fill="#166534" stroke="#22c55e" stroke-width="1"/>
+            <rect x="278" y="50" width="14" height="18" fill="#15803d"/>
+            <rect x="278" y="75" width="14" height="18" fill="#15803d"/>
+            <rect x="278" y="100" width="14" height="15" fill="#065f46"/>
+            <!-- 창문 -->
+            <rect x="282" y="53" width="4" height="5" fill="#fbbf24" opacity=".8"/>
+            <rect x="289" y="53" width="4" height="5" fill="#fbbf24" opacity=".8"/>
+            <rect x="282" y="78" width="4" height="5" fill="#fbbf24" opacity=".6"/>
+            <!-- 텐트 -->
+            <polygon points="380,115 380,65 420,55 460,65 460,115" fill="#7c2d12" stroke="#f97316" stroke-width="1.2"/>
+            <polygon points="380,65 420,55 460,65 420,70" fill="#9a3412"/>
+            <!-- 모닥불 -->
+            <text x="410" y="112" font-size="20" font-family="sans-serif">🔥</text>
+            <!-- 달 -->
+            <circle cx="580" cy="30" r="20" fill="#1e3a5f"/>
+            <circle cx="570" cy="24" r="16" fill="#0f2d1a"/>
+            <text x="556" y="38" font-size="18" font-family="sans-serif">🌙</text>
+            <!-- 텍스트 -->
+            <text x="340" y="48" text-anchor="middle" font-size="19" font-weight="900" fill="#4ade80" font-family="sans-serif">맵 확장 &amp; 시즌 이벤트</text>
+            <text x="285" y="130" text-anchor="middle" font-size="12" fill="#22c55e" font-family="sans-serif">무한의 탑</text>
+            <text x="420" y="130" text-anchor="middle" font-size="12" fill="#f97316" font-family="sans-serif">위험한 캠핑</text>
+            <text x="90" y="75" text-anchor="middle" font-size="13" fill="#86efac" font-family="sans-serif">보스 3종</text>
+            <text x="90" y="92" text-anchor="middle" font-size="11" fill="#6ee7b7" font-family="sans-serif">직업 2종 추가</text>
+          </svg>
+        </div>
+        <div class="notice-section-body">
+          <span class="notice-version-tag past">이전 업데이트</span>
+          <div class="notice-update-title">🗺️ 맵 확장 &amp; 시즌 이벤트 업데이트</div>
+          <div class="notice-item-list">
+            <div class="notice-item"><div class="notice-item-dot green"></div><span><b>무한의 탑</b> — 로그라이크 갈림길, 무한 층수, 전용 몬스터/유물</span></div>
+            <div class="notice-item"><div class="notice-item-dot green"></div><span><b>위험한 캠핑</b> — 낮/밤 생존, 채집/제작, 핫바, 손전등</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>시즌 이벤트 6종 미니게임 (2개월 순환)</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>신규 보스 3종, 업적/칭호 시스템, 신규 직업 2종</span></div>
+            <div class="notice-item"><div class="notice-item-dot"></div><span>모바일 터치 컨트롤 추가</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ 개발자 이스터에그 프리뷰 모달 ══ -->
+<div id="devEggPreviewModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:9800;align-items:center;justify-content:center;">
+  <div style="background:#0f0a1e;border:2px solid #7c3aed;border-radius:16px;padding:18px;max-width:600px;width:92vw;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:16px;font-weight:900;color:#f0abfc;">🛠️ 이스터에그 프리뷰 (DEV)</div>
+      <button onclick="closeDevEggPreview()" style="background:none;border:none;color:#9ca3af;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:10px;">버튼을 누르면 해당 이스터에그의 발생 조건을 실제로 재현해서 엔딩/연출까지 보여줍니다.</div>
+    <button onclick="devRevealAllEggs()" style="width:100%;padding:7px 0;margin-bottom:10px;background:linear-gradient(135deg,#374151,#1f2937);border:none;border-radius:8px;color:#d1d5db;font-size:10px;font-weight:700;cursor:pointer;">⚡ 전체 즉시 해금 (연출 없이 한번에)</button>
+    <div id="devEggPreviewList" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+</div>
+<!-- ══ 백룸 엔딩 프리뷰 모달 (DEV) ══ -->
+<div id="devBrEndingModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:9800;align-items:center;justify-content:center;">
+  <div style="background:#0a0e14;border:2px solid #0ea5e9;border-radius:16px;padding:18px;max-width:420px;width:92vw;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:16px;font-weight:900;color:#7dd3fc;">🎬 백룸 엔딩 프리뷰 (DEV)</div>
+      <button onclick="closeDevBrEndingModal()" style="background:none;border:none;color:#9ca3af;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:10px;">각 레벨의 탈출 엔딩 컷신을 바로 재생합니다.</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <button onclick="closeDevBrEndingModal();devBrEnding('level0')" style="padding:8px 10px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#0f172a,#1e293b);color:#7dd3fc;text-align:left;">🚪 LEVEL 0 · ESCAPED</button>
+      <button onclick="closeDevBrEndingModal();devBrEnding('fun')" style="padding:8px 10px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#4a044e,#831843);color:#f9a8d4;text-align:left;">🎉 LEVEL FUN=) · THE PARTY IS OVER</button>
+      <button onclick="closeDevBrEndingModal();devBrEnding('garage')" style="padding:8px 10px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1c1917,#292524);color:#facc15;text-align:left;">🅿️ 주차장 · B-∞</button>
+      <button onclick="closeDevBrEndingModal();devBrEnding('pool')" style="padding:8px 10px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#03304d,#0c4a6e);color:#7dd3fc;text-align:left;">🏊 수영장 · DRAINED</button>
+      <button onclick="closeDevBrEndingModal();devBrEnding('field')" style="padding:8px 10px;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1a2e05,#365314);color:#bef264;text-align:left;">🌾 갈대밭 · HORIZON</button>
+    </div>
+  </div>
+</div>
+<!-- ══ 상인 소환 모달 (DEV) ══ -->
+<div id="devMerchSummonModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:9800;align-items:center;justify-content:center;">
+  <div style="background:#0f0a1e;border:2px solid #f97316;border-radius:16px;padding:18px;max-width:420px;width:92vw;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:16px;font-weight:900;color:#fdba74;">🛠️ 상인 소환 (DEV)</div>
+      <button onclick="closeDevMerchantSummon()" style="background:none;border:none;color:#9ca3af;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:10px;">버튼을 누르면 해당 상인이 즉시 로비에 나타납니다.</div>
+    <div id="devMerchSummonList" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+</div>
+<div id="codeModal">
+  <div class="code-box">
+    <h3>🔑 코드 입력</h3>
+    <p>보상 코드를 입력하세요</p>
+    <div class="code-msg" id="codeMsg"></div>
+    <input class="code-input" id="codeInput" type="text" placeholder="코드 입력..." maxlength="20" autocomplete="off">
+    <button class="code-submit" onclick="submitCode()">✅ 적용</button>
+    <button class="code-cancel" onclick="closeCode()">닫기</button>
+  </div>
+</div>
+
+
 </body>
 </html>
